@@ -16,7 +16,7 @@ Prepared for Roland Berger (RB GenAI evaluation).
 
 import json
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -86,7 +86,7 @@ def main() -> None:
     Path(CONFIG["agents"]["summary_file"]).write_text(json.dumps(stats, indent=2))
 
     manifest = {
-        "run_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "run_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "pipeline": "agentic (LangChain LCEL, one JudgeAgent per model)",
         "config": CONFIG,
         "llm_calls": {"q0": len(q0), "q1": len(q1), "q2": len(q2)},

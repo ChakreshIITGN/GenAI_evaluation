@@ -21,7 +21,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-from typing import TypeVar
 
 import yaml
 from dotenv import load_dotenv
@@ -40,8 +39,6 @@ _client = Client(
     host=LLM_CFG["host"],
     headers={"Authorization": f"Bearer {os.environ.get('OLLAMA_KIMIK3_KEY1', '')}"},
 )
-
-S = TypeVar("S", bound=BaseModel)
 
 
 def load_prompt(name: str) -> str:
@@ -93,7 +90,7 @@ def _schema_block(schema: type[BaseModel]) -> str:
     )
 
 
-def ask(prompt: str, schema: type[S], model: str | None = None) -> S:
+def ask[S: BaseModel](prompt: str, schema: type[S], model: str | None = None) -> S:
     """Send `prompt` and return the reply parsed into `schema`.
 
     Args:

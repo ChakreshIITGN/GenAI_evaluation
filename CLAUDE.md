@@ -31,6 +31,14 @@ in archive/. Key deviations from plan, all logged in docs/DECISIONS.md:
 fixed split instead of seeded (author), prompts in user_prompts/, outputs in
 output/ not results/. Next: `eval` branch — Layers 1–3, KPIs, figures.
 
+`agentic_workflow` branch COMPLETE (2026-08-19): LangChain LCEL agentic
+re-implementation of the EDA judging — one JudgeAgent per judge model
+(src/agents/: judge_agent, monitor, orchestrator; run_agentic_eda.py), same
+prompts/schemas/split/CSV schemas as run_eda.py, separate cache/agentic/,
+per-agent JSONL call logs + output/agent_summary.json. No LangGraph (plan
+§1). Mocked tests in tests/test_agents.py; ruff clean. Architecture and
+deferred-scaling limitations in docs/AGENTIC_NOTES.md.
+
 ## First task (on `eda`)
 Create, in this order, and run `pytest` after each:
 1. `pyproject.toml`, `config.yaml`, `.env.example`, `.gitignore` (data/, cache/ keys, .env)

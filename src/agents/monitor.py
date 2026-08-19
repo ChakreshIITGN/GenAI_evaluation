@@ -13,7 +13,7 @@ Prepared for Roland Berger (RB GenAI evaluation).
 import json
 import re
 import statistics
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -80,7 +80,7 @@ class AgentMonitor:
             output_tokens: completion tokens if reported.
         """
         entry = {
-            "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "timestamp": datetime.now(UTC).isoformat(timespec="seconds"),
             "model": self.model,
             "prompt_hash": prompt_hash,
             "latency_s": round(latency_s, 3),

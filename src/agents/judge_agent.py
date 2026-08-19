@@ -18,7 +18,6 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import TypeVar
 
 import yaml
 from dotenv import load_dotenv
@@ -46,8 +45,6 @@ load_dotenv()  # makes OLLAMA_KIMIK3_KEY1 available before any agent is built
 _CONFIG: dict = yaml.safe_load(Path("config.yaml").read_text())
 LLM_CFG: dict = _CONFIG["llm"]
 CACHE_DIR = Path(_CONFIG["agents"]["cache_dir"])
-
-S = TypeVar("S", bound=BaseModel)
 
 
 def _extract_reply(message: AIMessage) -> dict:
@@ -127,7 +124,7 @@ class JudgeAgent:
         key = hashlib.sha256(f"{self.model}\n{prompt}".encode()).hexdigest()[:24]
         return self._cache_dir / f"{key}.json"
 
-    def _ask(self, prompt: str, schema: type[S]) -> S:
+    def _ask[S: BaseModel](self, prompt: str, schema: type[S]) -> S:
         """Send `prompt` through the chain and return a validated `schema`.
 
         Appends the JSON Schema instructions, serves cache hits from disk,
