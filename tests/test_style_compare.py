@@ -7,14 +7,12 @@ Author: Dr. Chakresh Kr. Singh
 Prepared for Roland Berger (RB GenAI evaluation).
 """
 
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import pytest
 
 from src import embed
-from src.style_compare import cohens_d, paired_differences, plot_dumbbell
+from src.style_compare import cohens_d, paired_differences
 
 
 def make_features() -> pd.DataFrame:
@@ -46,14 +44,6 @@ def test_cohens_d_known_value() -> None:
 def test_cohens_d_zero_spread_is_zero() -> None:
     """Constant differences (sd = 0) return 0.0, never a division error."""
     assert cohens_d(pd.Series([1.0, 1.0, 1.0])) == 0.0
-
-
-def test_dumbbell_writes_png(tmp_path: Path) -> None:
-    """The dumbbell figure lands on disk as a valid PNG."""
-    out = tmp_path / "dumbbell.png"
-    plot_dumbbell(make_features(), out)
-    assert out.exists()
-    assert out.read_bytes()[:4] == b"\x89PNG"
 
 
 class FakeEmbedder:

@@ -84,12 +84,28 @@ def _strip_fences(raw: str) -> str:
     return text.strip()
 
 
+def _example_instance(schema: type[BaseModel]) -> str:
+    """A placeholder instance showing the required SHAPE of the reply.
+
+    Some models echo the schema back instead of answering; a concrete
+    example instance is the reliable cure.
+    """
+    placeholders = {bool: True, float: 0.0, int: 0}
+    example = {
+        name: placeholders.get(field.annotation, "...")
+        for name, field in schema.model_fields.items()
+    }
+    return json.dumps(example)
+
+
 def _schema_block(schema: type[BaseModel]) -> str:
     """Instruction appended to every prompt describing the required JSON."""
     return (
         "\n\nRespond with a single JSON object that matches this JSON Schema "
         "exactly (no extra keys, no surrounding text):\n"
-        f"{json.dumps(schema.model_json_schema())}"
+        f"{json.dumps(schema.model_json_schema())}\n"
+        "Do NOT return the schema itself. Return an instance with your actual "
+        f"answer, shaped like this example: {_example_instance(schema)}"
     )
 
 
@@ -124,8 +140,11 @@ def ask(prompt: str, schema: type[S], model: str | None = None) -> S:
         # One repair attempt: show the model its invalid reply and the error.
         repair = (
             full_prompt
-            + f"\n\nYour previous reply was invalid.\nReply: {raw}\nError: {err}\n"
-            "Return only a corrected JSON object matching the schema."
+            + f"\n\nYour previous reply was invalid (a common mistake is "
+            f"repeating the schema instead of answering).\nReply: {raw}\n"
+            f"Error: {err}\n"
+            "Return only a corrected JSON object: the required fields filled "
+            "with your actual answer, no schema, no extra text."
         )
         raw = _call(repair, model)
         parsed = schema.model_validate_json(_strip_fences(raw))  # second failure propagates

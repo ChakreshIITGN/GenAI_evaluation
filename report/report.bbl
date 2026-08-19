@@ -1,10 +1,39 @@
 \begin{thebibliography}{}
 
+\bibitem[He et~al., 2021]{he2021deberta}
+He, P., Liu, X., Gao, J., and Chen, W. (2021).
+\newblock {DeBERTa}: Decoding-enhanced {BERT} with disentangled attention.
+\newblock In {\em International Conference on Learning Representations
+  ({ICLR})}.
+
+\bibitem[Hutto and Gilbert, 2014]{hutto2014vader}
+Hutto, C.~J. and Gilbert, E. (2014).
+\newblock {VADER}: A parsimonious rule-based model for sentiment analysis of
+  social media text.
+\newblock In {\em Proceedings of {ICWSM}}.
+
 \bibitem[Hyland, 2005]{hyland2005metadiscourse}
 Hyland, K. (2005).
 \newblock {\em Metadiscourse: Exploring Interaction in Writing}.
 \newblock Continuum, London.
-\newblock Source of the hedging lexicon.
+
+\bibitem[Krippendorff, 2004]{krippendorff2004content}
+Krippendorff, K. (2004).
+\newblock {\em Content Analysis: An Introduction to Its Methodology}.
+\newblock Sage, Thousand Oaks, CA.
+
+\bibitem[Laban et~al., 2022]{laban2022summac}
+Laban, P., Schnabel, T., Bennett, P.~N., and Hearst, M.~A. (2022).
+\newblock {SummaC}: Re-visiting {NLI}-based models for inconsistency detection
+  in summarization.
+\newblock {\em Transactions of the Association for Computational Linguistics},
+  10.
+
+\bibitem[McCarthy and Jarvis, 2010]{mccarthy2010mtld}
+McCarthy, P.~M. and Jarvis, S. (2010).
+\newblock {MTLD}, vocd-{D}, and {HD-D}: A validation study of sophisticated
+  approaches to lexical diversity assessment.
+\newblock {\em Behavior Research Methods}, 42(2).
 
 \bibitem[Park et~al., 2024]{park2024generative}
 Park, J.~S., Zou, C.~Q., Shaw, A., Hill, B.~M., Cai, C., Morris, M.~R., Willer,

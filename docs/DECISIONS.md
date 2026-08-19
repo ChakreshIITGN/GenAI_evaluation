@@ -55,6 +55,63 @@ Major decisions and milestones, newest last. Each entry: date, decision, why.
 - Figures: one fixed color per judge across all plots (sorted model names →
   palette order), grouped bars, legend with model names.
 
+## 2026-08-19 — Post-run simplifications (author decisions)
+
+- **Q1/Q2 reported as yes-COUNTS per person, not percentages.** At 4 held-out
+  questions per person a percentage reads like a graded "how much it
+  captures", which a yes/no verdict is not. No category split (12 items are
+  too few to slice twice). Volatility caveat printed on the figures. Q0
+  stays a rate — 60 items make accuracy meaningful.
+- **Style dumbbell removed.** Same means as the EDA per-feature bar panels;
+  one style figure is enough (raw units win). The paired-difference /
+  Cohen's d table (style_differences.csv) remains the eval-grade metric.
+- **Topic layer fixed after a degenerate first fit** (2 topics, one of them
+  "and, the, to" holding ~95% of sentences): English stopwords in the
+  c-TF-IDF vectorizer (naming only), UMAP n_neighbors 15 -> 10 (defaults
+  over-smooth ~200 short sentences into one cluster). Added the sentence
+  cluster map (2D UMAP of all sentence embeddings, human vs AI) — the
+  plan's "2D topic overview", built in matplotlib.
+- **KPI 2 from the first run is void** (artifact of the degenerate topics);
+  it must be recomputed after the refit before anything cites it.
+- **KPI 1 / RAG matrix pooled over categories, split by PERSON.** Per-category
+  groups hold only 3–15 pairs — too small for a robust verdict. Reported in
+  deliverables as an explicit aggregation choice due to small data.
+- **First eval outcome preserved** in
+  `archive/run3_2026-08-19_evalrun1_categoryRAG_degenerate_topics/` (author
+  instruction): the report will show how the degenerate topic model and the
+  too-thin category split were detected and corrected, not hide them.
+- **Honest-try rule for topics:** BERTopic upgraded (mpnet embeddings — same
+  model as Layer 1a — stopword naming, n_neighbors 10) and guarded by
+  `is_degenerate()` (config: min_topics 3, max_topic_share 0.6). If the fit
+  is still degenerate, KPI 2 is reported as NOT COMPUTABLE — never as
+  "all topics covered".
+
+## 2026-08-19 — Topic layer: reported as not computable (author decision)
+
+- The corrected BERTopic (mpnet, stopwords, n_neighbors 10) is STILL
+  degenerate on this data. Interpretation: the AI's invention is diffuse and
+  in-domain — false specifics inside the same personal-care themes, not new
+  themes — so claim-level NLI catches it but theme-level clustering cannot.
+- A similarity-graph / community-detection alternative was considered and
+  rejected: at near-uniform pairwise similarity the communities are an
+  artifact of the chosen threshold.
+- Decision: report KPI 2 as NOT COMPUTABLE at this n, with the diagnosis
+  above. "A complete picture is better than an incomplete well done."
+
+## 2026-08-19 — Verdict wording: "believable" dropped (author decision)
+
+- At believability alpha 0.27 the panel does not support the positive claim
+  "believable". The data supports the negative claim only: simulations are
+  NOT RELIABLY DISTINGUISHABLE in blind reading (0.55 to 0.62 vs 0.50
+  chance), while all three judges scored AI answers somewhat less human on
+  average without being able to act on it per item.
+- Noted explicitly: detectability (form, one text, no ground truth) and
+  fidelity (content vs the person's real answer) measure different things;
+  fluent-but-false is not a contradiction, it is the core risk finding.
+- Fresh empty-cache rerun reproduced every number identically; the earlier
+  apparent "changes" were traced to the fold-design run judging different
+  questions per judge than the final shared-set panel.
+
 ## Progress
 
 - [x] main pushed (spec, CLAUDE.md, scaffolding); `eda` branch created

@@ -1,197 +1,259 @@
 % report.tex — RB GenAI evaluation, 2-page two-column report (plan §8).
 % Compile: pdflatex report && bibtex report && pdflatex report && pdflatex report
-% All run-1 numbers are wrapped in \PLACEHOLDER{...} pending the run-2 rerun
-% (lowercased judge inputs, 3 judge families, held-out set q7–q10).
+% Numbers final, from the verified empty-cache rerun (output/).
+% House style: no long dashes in prose or captions.
 \documentclass[10pt,twocolumn]{article}
 
-\usepackage[margin=1.6cm,columnsep=0.7cm]{geometry}
+\usepackage[margin=1.4cm,columnsep=0.6cm]{geometry}
 \usepackage{newtxtext,newtxmath} % Times-like text and math
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{natbib}
+\usepackage{enumitem}
 \usepackage[hidelinks]{hyperref}
 
 \graphicspath{{../output/plots/}}
-
-% Placeholder marker: every number below comes from run 1 and will be
-% replaced after the run-2 rerun. Bold brackets make stale values obvious.
-\newcommand{\PLACEHOLDER}[1]{\textbf{[#1]}}
 
 % APA-flavoured compact headings.
 \usepackage{titlesec}
 \titleformat{\section}{\normalsize\bfseries\centering}{}{0pt}{}
 \titleformat{\subsection}{\normalsize\bfseries\itshape}{}{0pt}{}
-\titlespacing{\section}{0pt}{6pt}{3pt}
-\titlespacing{\subsection}{0pt}{5pt}{2pt}
+\titlespacing{\section}{0pt}{3pt}{2pt}
+\titlespacing{\subsection}{0pt}{4pt}{2pt}
 
 \setlength{\parskip}{0pt}
 \setlength{\parindent}{1em}
-\usepackage[small,it]{caption}
-\captionsetup{skip=3pt}
+% Tight float spacing: five column-width figures must fit in two pages.
+\setlength{\textfloatsep}{7pt}
+\setlength{\floatsep}{6pt}
+\setlength{\intextsep}{6pt}
+\usepackage[font=footnotesize,labelfont=it]{caption}
+\captionsetup{skip=1pt}
+\setlist[itemize]{leftmargin=1.0em,itemsep=0pt,parsep=0pt,topsep=1pt}
+\setlength{\bibsep}{0pt} % natbib: compact reference list
 
-\title{\large\bfseries Believable but Not Faithful: Evaluating LLM Human
+\title{\large\bfseries Fluent, Generic, and Unfaithful: Evaluating LLM Human
 Simulations Against Real Consumer Answers}
 \author{\normalsize Dr.\ Chakresh Kr.\ Singh\thanks{Prepared for Roland Berger.}}
-\date{\normalsize \today}
+\date{}
 
 \begin{document}
 \maketitle
 
-\section{Verdict}
-The simulations produce answers that \emph{read} human but often do not carry
-the person's actual content or voice. Standing alone, most AI answers pass as
-human; held against what the person really said, they routinely add
-preferences never stated, drop the person's specifics, and flatten an
-individual voice into polished marketing tone. They are usable as
-plausibility generators, not yet as stand-ins for these consumers.
+\section{The Problem}
+A Beauty \& Wellbeing company built LLM-based simulations of individual
+consumers from a single open-ended interview, following
+\citet{park2024generative}. Can those simulations replace real respondents'
+open-ended answers? We treat the evaluation as a \emph{risk control}: where
+can simulated answers be trusted for decisions, and where not. Ground truth
+is the real humans' answers to a second interview
+(3 people $\times$ 10 questions, one human and one AI answer per pair).
 
-\section{Method}
-Data: 3 consumers $\times$ 10 open-ended questions, one human and one
-simulated answer per pair \citep[simulations built per][]{park2024generative}.
-The exploratory stage asks three yes/no questions of an LLM judge, plus a
-deterministic style layer:
-\textbf{Q0 --- believability (zero-shot):} shown one answer alone, is it
-human or AI?
-\textbf{Q1 --- personality:} given the person's \emph{other} answers as
-context, does the held-out AI answer capture this person?
-\textbf{Q2 --- content:} question, human answer, AI answer side by side ---
-does the AI say what the person said?
-Q1/Q2 are scored on a fixed held-out set (q7--q10 for every person; context =
-the rest). Judgements use temperature~0, fixed seed, JSON-validated outputs,
-fully cached. In parallel, seven deterministic stylometric features (length,
-lexical diversity, word length, contractions, hedging
-\citep{hyland2005metadiscourse}, sentiment, stance markers) are computed on
-every answer. The full pipeline (in progress) replaces the binary judgements
-with sentence-level NLI coverage/fidelity, a pooled topic map for blind
-spots/phantoms, and a multi-family LLM judge panel with inter-judge
-agreement.
+\section{Our Outcome}
+The simulations are \textbf{not reliably distinguishable in blind reading,
+generic rather than individual, and unfaithful} to what the real people
+said.
 
-\section{Results}
-All numbers below are from run~1 and will be replaced by the rerun
-(lowercased judge inputs; three judge families: gpt-oss:120b,
-deepseek-v4-flash, glm-5.2; same held-out design).
+\textbf{Not reliably distinguishable.} Blind judges (one answer, no label,
+randomised order) discriminate human from AI at only 0.55 / 0.58 / 0.67
+against 0.50 chance. All three judges could better identify human answers than AI (Figure 1)
+but could not agree reliably per item. Krippendorff's
+$\alpha$ \citep{krippendorff2004content} is chance-corrected agreement
+among the three judges on identical items (1 perfect, 0 chance); here
+$\alpha = 0.396$, a weak-confidence result.
 
-\textbf{Believability (Q0).} Overall accuracy \PLACEHOLDER{58\%}, strongly
-asymmetric: humans correctly called human \PLACEHOLDER{80\%} of the time, but
-only \PLACEHOLDER{37\%} of AI answers were caught ---
-\PLACEHOLDER{19 of 30} fooled the judge (Fig.~\ref{fig:q0}).
+\textbf{Generic.} When asked whether the AI answer is recognisably \emph{this}
+person rather than a generic segment member, the judges could not conclude deterministically.
 
-\textbf{Personality (Q1).} \PLACEHOLDER{2 of 12} held-out AI answers judged
-to capture the person (\PLACEHOLDER{17\%}); both successes belong to one
-person, so individuation quality varies by person (Fig.~\ref{fig:q1}).
+\textbf{Unfaithful.} These numbers come from the deterministic calculations using encoders. Coverage (how much of what the person said the simulation
+kept) is 16.5\%; fidelity (how much of what the simulation said the person
+backs) is 4.4\%, with 3 outright contradictions across 30 pairs. The measure is strict by
+construction (sentence-level entailment), so absolute values are
+understated. 
 
-\textbf{Content (Q2).} \PLACEHOLDER{1 of 12} pairs judged to carry the
-person's content (\PLACEHOLDER{8\%}), with \PLACEHOLDER{2} outright
-contradictions (Fig.~\ref{fig:q2}). The binary criterion is harsh --- several
-``no'' verdicts concede the core points matched --- which is exactly what the
-coverage/fidelity split of the full pipeline will quantify.
+The combination of the three KPIs makes inference unreliable: detectability judges the \emph{form} of one text alone; coverage and fidelity compare \emph{content} against the
+person's real answer. Fluent in-domain text passes blind reading while its
+specifics are false, which is why a measurement layer is required.
+
+\textbf{Exploratory judgements agree.} Three judge families each scored the
+same 12 held-out items (q7 to q10 for every person), so one verdict is one
+judge on one question. Personality capture: 7 of 36 verdicts yes (4, 2, 1
+per judge; Figure~\ref{fig:q1}). Content capture: 9 of 36 verdicts yes
+(4, 3, 2 per judge; Figure~\ref{fig:q2}). Zero-shot human-or-AI accuracy is
+0.58 to 0.78 per judge and asymmetric: every judge recognises humans better
+(0.77 to 0.90) than it catches simulations (0.30 to 0.67;
+Figure~\ref{fig:q0}).
+
+\textbf{The style gap, measured.} On the deterministic features of
+Figure~\ref{fig:style}, the AI writes 55 words to the human's 31, with far
+richer vocabulary (MTLD 95 vs.\ 56; \citealp{mccarthy2010mtld}), hedges
+less (2.35 vs.\ 5.57 per 100 words), and is strongly positive where humans
+are near neutral (VADER mean 0.68 vs.\ 0.28; \citealp{hutto2014vader}).
+The simulations sell; the humans shrug.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.9\columnwidth]{eda_q0_accuracy.png}
-  \caption{Q0 zero-shot human-or-AI accuracy, by true label.}
+  \includegraphics[width=0.52\columnwidth]{eda_q0_accuracy.png}
+  \caption{Zero-shot detection accuracy per judge model. Bars show the
+  share of the 60 answers each judge labelled correctly, overall and by
+  true side; the dashed line marks the 50\% coin-flip level. All three
+  judges recognise humans better than they catch simulations.}
   \label{fig:q0}
 \end{figure}
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.9\columnwidth]{eda_q1_personality.png}
-  \caption{Q1 personality capture: share judged ``yes'', by person,
-  category, and judge.}
+  \includegraphics[width=0.52\columnwidth]{eda_q1_personality.png}
+  \caption{Personality-capture verdicts on the held-out questions (q7 to
+  q10). Bars count yes verdicts per person, out of 4 per judge model. Only
+  7 of 36 verdicts find the person's voice in the AI answer, and most
+  concentrate on one person.}
   \label{fig:q1}
 \end{figure}
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.9\columnwidth]{eda_q2_content.png}
-  \caption{Q2 content capture: share judged ``yes'', by person, category,
-  and judge.}
+  \includegraphics[width=0.52\columnwidth]{eda_q2_content.png}
+  \caption{Content-capture verdicts on the held-out questions (q7 to q10).
+  Bars count yes verdicts per person, out of 4 per judge model. Only 9 of
+  36 verdicts find the human answer's content in the AI answer, almost all
+  for a single person.}
   \label{fig:q2}
 \end{figure}
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.9\columnwidth]{eda_style_features.png}
-  \caption{Deterministic style features, human vs.\ AI means.}
+  \includegraphics[width=0.52\columnwidth]{eda_style_features.png}
+  \caption{Deterministic style features, measured on every answer. Each
+  panel compares the human mean (blue) with the AI mean (green) for one of
+  the seven features, over 30 answers per side. The AI writes longer, more
+  varied, less hedged and far more positive text than the people it
+  simulates.}
   \label{fig:style}
 \end{figure}
+\section{Methodology}
+We started from evaluation criteria where each criterion led to one
+metric. 
 
-\section{Where the Simulations Fail}
-\subsection{Style flattening, measured}
-The deterministic layer (Fig.~\ref{fig:style},
-Table~\ref{tab:style}) shows a consistent shift from a person's voice to a
-generic written register: the AI talks \PLACEHOLDER{75\%} longer, with far
-richer vocabulary and longer words, hedges \PLACEHOLDER{2.4$\times$} less,
-and --- the sharpest single signal --- is strongly positive where the humans
-are near neutral (sentiment \PLACEHOLDER{0.68} vs.\ \PLACEHOLDER{0.28}). The
-simulations \emph{sell}; the humans \emph{shrug}. This is the flattening
-mechanism \citet{park2024generative} warn about, here with numbers attached.
+(a) Does it say what the person said: content coverage and fidelity
+via NLI. 
 
-\begin{table}[t]
-\centering\small
-\caption{Style feature means (run 1; all values pending rerun).}
-\label{tab:style}
-\begin{tabular}{lrr}
-\toprule
-Feature & Human & AI \\
-\midrule
-Length (words)        & \PLACEHOLDER{31.5}  & \PLACEHOLDER{55.0} \\
-Lexical diversity (MTLD) & \PLACEHOLDER{56.3} & \PLACEHOLDER{95.3} \\
-Mean word length      & \PLACEHOLDER{4.27}  & \PLACEHOLDER{4.74} \\
-Contraction rate      & \PLACEHOLDER{0.017} & \PLACEHOLDER{0.010} \\
-Hedging /100w         & \PLACEHOLDER{5.57}  & \PLACEHOLDER{2.35} \\
-Sentiment mean        & \PLACEHOLDER{0.28}  & \PLACEHOLDER{0.68} \\
-Sentiment std         & \PLACEHOLDER{0.12}  & \PLACEHOLDER{0.11} \\
-Stance /100w          & \PLACEHOLDER{1.70}  & \PLACEHOLDER{1.42} \\
-\bottomrule
-\end{tabular}
-\end{table}
+(b) Does it sound like a person, and like \emph{this} person: style
+features plus an individuation judge. 
 
-\subsection{Content is added, not just missed}
-The dominant Q2 failure is \emph{addition}: the AI injects preferences the
-person never stated (sustainability, reading reviews, dermatologists,
-eco-packaging) while omitting the person's actual specifics (price
-sensitivity, the glass bottle, the oud smell). ``Sustainability'' recurs as
-an injected theme across people --- a likely \emph{phantom topic} the topic
-map will test. For a research client this is the worst failure mode:
-invented preferences look like insight.
+(c) Could anyone tell: blind
+believability. 
 
-\subsection{Contradictions}
-Two answers directly contradict the person: one simulation picks a different
-product option than its human, another invents ingredient preferences where
-the person explicitly had none. Contradiction is rarer than addition but
-categorically more dangerous, so the full pipeline counts it separately.
+(d) Do the two sides talk about the same themes: a topic
+map. 
 
-\subsection{The orthography confound --- and its control}
-In run~1, nearly every Q1 ``no'' cited surface form: the humans write
-lowercase, brief, with typos; the AI writes capitalised, polished prose. Some
-of that is transcription artefact, not personality. Run~2 therefore
-lowercases all judge inputs (style features stay on raw text --- they
-measure, they do not judge), so the rerun scores substance rather than
-formatting.
+Below is the detailed methodology with its strengths and weakness.
+\begin{itemize}
+\item \textbf{Method choice:} sentence-level NLI in both directions with a
+DeBERTa cross-encoder \citep{he2021deberta} (coverage and fidelity; SummaC
+lineage, \citealp{laban2022summac}). 
 
-\section{Limitations, Each with a Fix}
-\textbf{(1) $n=30$ pairs.} Directional only; no significance claims.
-\emph{Request:} the full second-interview dataset.
-\textbf{(2) No human ceiling.} Humans are not self-consistent either;
-\citet{park2024generative} normalise by two-week test--retest.
-\emph{Request:} re-interview a subset to establish that ceiling.
-\textbf{(3) LLM judges, no human raters.} Mitigated by a multi-family panel
-(three model families) with inter-judge agreement reported.
-\emph{Request:} a small human-rated calibration set.
-\textbf{(4) Possible generation-prompt artefacts.} Style deviations may stem
-from the generation setup (chain-of-thought, expert reflections), not the
-persona. \emph{Request:} log and share the generation prompts and Interview~1
-transcripts, so style can be tuned rather than judged and retrieval can be
-separated from simulation.
+\emph{Strength:} deterministic,
+auditable, direction-aware; the two directions punish padding and thinness
+respectively. 
+
+\emph{Weakness:} strict entailment on conversational text
+understates absolute values (domain shift).
+
+\item \textbf{Method choice:} seven deterministic stylometric features per
+answer (length, vocabulary, hedging, sentiment; hedging lexicon from
+\citealp{hyland2005metadiscourse}). 
+
+\emph{Strength:} fully deterministic,
+published lexicons, reproducible. 
+
+\emph{Weakness:} surface-level; cannot
+see meaning.
+
+\item \textbf{Method choice:} LLM judge panel of three model families
+(gpt-oss:120b, deepseek-v4-flash, glm-5.2) scoring identical items; judges
+output only booleans or bounded scores; aggregates computed in code.
+
+\emph{Strength:} family diversity counters self-preference; head-to-head
+comparable; agreement measurable. 
+
+\emph{Weakness:} judges are themselves
+LLMs; no human raters; the believability construct is weak at
+$\alpha = 0.396$.
+
+\item \textbf{Method choice:} blind believability (one unlabelled answer,
+randomised order). 
+
+\emph{Strength:} blinding plus randomisation; the
+discrimination rate is computed in code. 
+
+\emph{Weakness:} low inter-judge
+agreement; judges biased toward calling text human.
+
+\item \textbf{Method choice:} individuation with a persona sketch (the
+person's other nine answers). 
+
+\emph{Strength:} the judge sees the person's
+own words; our most reliable result ($\alpha = 0.615$). 
+
+\emph{Weakness:}
+sketch quality bounded by nine short answers.
+
+\item \textbf{Method choice:} seeded BERTopic topic map over pooled
+human/AI sentences. 
+
+\emph{Strength:} targets the population-structure gap
+the reference paper concedes. 
+
+\emph{Weakness:} degenerate at this $n$;
+reported as not computable.
+
+\item \textbf{Method choice:} fixed explainable split (q7 to q10 held out
+for every person), lowercased judge inputs, full disk cache.
+
+\emph{Strength:} explainable, reproducible; orthography confound removed.
+\emph{Weakness:} lowercasing also removes any real stylistic case signal.
+\end{itemize}
+
+\section{Caveats and Limitations}
+\begin{itemize}
+\item \textbf{$n=30$ pairs.} We could not test significance
+level clearly and had to aggregate at human level. This is because
+per-category slices were too small (3 to 15 pairs). 
+\item \textbf{Orthography confound, found and corrected.} Run-1 personality
+verdicts keyed on lowercase and typos, transcription artefacts rather than
+voice; judge inputs were lowercased in subsequent runs
+\item \textbf{Topic-level seggregations not computable at this $n$} The
+first BERTopic fit collapsed into one stopword mega-topic. We corrected for 
+stopwords and used mpnet embeddings with \texttt{n\_neighbors} = 10).  This still led to generic topics with no clear distinction. A similarity-graph alternative was rejected as it would be sensitive to similarity measure thresholds.
+\item \textbf{Judge layers are not stable} across cloud reruns despite
+temperature 0 and fixed seeds, while deterministic layers reproduce
+exactly. 
+\item \textbf{No test-retest ceiling.} We could not test humans stability as they were normalised in \citet{park2024generative}. 
+\item \textbf{Generation prompts unknown.} Style deviations may be prompt
+artefacts (chain-of-thought, expert reflections). These could not be tested
+\end{itemize}
 
 \section{Recommendation}
-\textbf{Use} the simulations for ideation, question piloting, and stress-testing
-survey wording --- tasks that need plausible consumer-shaped text, not this
-consumer's truth. \textbf{Do not use} them yet for preference measurement,
-concept ranking, or verbatim-style insight quotes: added content and inflated
-positivity would systematically bias findings toward enthusiasm the real
-consumers do not show. The full pipeline will convert this into a per-category
-green/amber/red decision map.
+Use the simulations for ideation, hypothesis generation, and
+question piloting: tasks that need plausible consumer-shaped text.
+
+Do not use hem for preference measurement, verbatim-style
+quotes, or individual-level insight.
+
+The simulations cannot be trusted as substitutes for these consumers'
+answers. They are not reliably distinguishable from human answers in blind
+reading, which makes their failures invisible to a reader; they revert to
+a generic segment member rather than the individual; and almost nothing
+they say is backed by what the person actually said, including three
+outright contradictions. Their fluency is precisely what makes them
+dangerous: nothing warns the reader that the content is wrong. A distinct
+but supporting observation is that the LLM components of the evaluation
+itself, the judges, were not run-to-run stable despite temperature 0 and
+fixed seeds; if LLMs cannot judge consistently, relying on them to
+\emph{be} the consumer is a larger leap. The stability of the simulations
+themselves was not testable with a single generation per question and is
+our first data request.
 
 \bibliographystyle{apalike}
-\bibliography{references}
+{\footnotesize
+\bibliography{references}}
 
 \end{document}

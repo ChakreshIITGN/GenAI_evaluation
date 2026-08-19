@@ -1,8 +1,10 @@
 # Report — RB GenAI evaluation (2-page, two-column)
 
-`report.tex` is the 2-page evaluation report. Figures are read from
-`../output/plots/` (run `run_plots.py` at the repo root first if they are
-missing).
+`report.tex` is the final 2-page evaluation report (EDA run 2 with three
+judge families and lowercased inputs, Layer-2 NLI coverage/fidelity,
+Layer-3 judge panel; all numbers from the verified empty-cache rerun,
+cross-checked against `output/*.csv`). Figures are read from
+`../output/plots/`.
 
 ## Compile
 
@@ -12,13 +14,16 @@ From this directory:
 pdflatex report && bibtex report && pdflatex report && pdflatex report
 ```
 
-Output: `report.pdf` (must stay at 2 pages).
+Output: `report.pdf` (must stay at exactly 2 pages).
 
-## Placeholders
+## Conventions
 
-Every number in the text and in Table 1 is wrapped in `\PLACEHOLDER{...}`
-(rendered as bold brackets, e.g. **[58%]**) because they come from run 1.
-After the run-2 rerun (lowercased judge inputs; judges gpt-oss:120b,
-deepseek-v4-flash, glm-5.2), replace each placeholder value and finally
-remove the "All numbers below are from run 1..." sentence in Results.
-Search for `PLACEHOLDER` to find them all.
+- Q1/Q2 exploratory results are raw counts ("x of 36 verdicts yes"), never
+  percentages (author decision). Q0 stays a rate.
+- KPI 2 (topic-level segment coverage) is reported as not computable at
+  this n; the Caveats section carries the diagnosis.
+- Deterministic layers are exactly reproducible; judge layers are
+  directionally stable but not bit-stable (stated in Methodology and
+  Caveats).
+- House style: no long dashes anywhere (text, captions, bibliography);
+  number ranges use "to".

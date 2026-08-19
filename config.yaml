@@ -45,10 +45,19 @@ eval:
   spacy_model: "en_core_web_sm"
   # Layer 2b — NLI entailment checker for coverage/fidelity.
   nli_model: "cross-encoder/nli-deberta-v3-base"
-  # Layer 2c — BERTopic: defaults, small min size at ~400 sentences, seeded.
+  # Layer 2c — BERTopic, seeded. Two small-n corrections (logged in
+  # docs/DECISIONS.md): English stopwords in the topic-word vectorizer
+  # (else topic names are "and, the, to"), and a smaller UMAP neighborhood
+  # (defaults over-smooth ~200 short sentences into one mega-cluster).
   bertopic:
     min_topic_size: 5
+    n_neighbors: 10
     seed: 42
+    # Honest-try guard: the fit is declared DEGENERATE (and KPI 2 reported
+    # as not computable) when it finds fewer topics than min_topics or one
+    # topic swallows more than max_topic_share of the assigned sentences.
+    min_topics: 3
+    max_topic_share: 0.6
     # A topic is a blind spot / phantom when one side holds at least this
     # fraction of its sentences; otherwise it is covered. Provisional at n=30.
     dominance: 0.8

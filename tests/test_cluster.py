@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.cluster import classify_topic, plot_topic_map
+from src.cluster import classify_topic, is_degenerate, plot_topic_map
 
 
 def test_blind_spot_when_human_dominates() -> None:
@@ -34,6 +34,28 @@ def test_dominance_boundary_is_inclusive() -> None:
     """Exactly at the threshold (8 of 10 = 0.8) counts as dominated."""
     assert classify_topic(8, 2, dominance=0.8) == "blind_spot"
     assert classify_topic(2, 8, dominance=0.8) == "phantom"
+
+
+def make_topics(sizes: list[tuple[int, int]]) -> pd.DataFrame:
+    """Topic frame from (n_human, n_ai) tuples."""
+    return pd.DataFrame(
+        [{"topic_id": i, "n_human": h, "n_ai": a} for i, (h, a) in enumerate(sizes)]
+    )
+
+
+def test_degenerate_when_too_few_topics() -> None:
+    """Fewer than min_topics (3 in config) -> degenerate."""
+    assert is_degenerate(make_topics([(10, 10), (5, 5)]))
+
+
+def test_degenerate_when_one_mega_topic() -> None:
+    """One topic holding > max_topic_share (0.6) of sentences -> degenerate."""
+    assert is_degenerate(make_topics([(50, 60), (3, 3), (2, 2)]))
+
+
+def test_healthy_fit_is_not_degenerate() -> None:
+    """Several comparable topics -> usable structure."""
+    assert not is_degenerate(make_topics([(10, 8), (7, 9), (6, 5), (4, 6)]))
 
 
 def test_topic_map_writes_png(tmp_path: Path) -> None:

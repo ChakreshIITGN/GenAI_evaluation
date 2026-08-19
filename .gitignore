@@ -232,3 +232,13 @@ archive/
 
 # Claude Code session/worktree metadata
 .claude/
+
+# Claude design guides (working briefs, not deliverables)
+design/claude_guide_*.md
+
+# LaTeX build junk and macOS duplicate files
+report/*.aux
+report/*.blg
+report/*.log
+report/*.out
+**/* 2.py

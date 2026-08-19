@@ -78,7 +78,7 @@ STYLE: dict = {
     "axes.edgecolor": RB_BLACK,
     "axes.labelcolor": RB_BLACK,
     "axes.titlesize": 11,
-    "axes.titleweight": "bold",
+    "axes.titleweight": "normal",
     "axes.titlelocation": "left",
     "xtick.color": RB_BLACK,
     "ytick.color": RB_BLACK,
@@ -86,10 +86,19 @@ STYLE: dict = {
 }
 
 
-def _save(fig: plt.Figure, path: str | Path) -> None:
-    """Write the figure as PNG (300 dpi, tight) and close it."""
+def _save(fig: plt.Figure, path: str | Path, tight: bool = True) -> None:
+    """Apply tight_layout (unless the caller already did), save PNG, close.
+
+    Args:
+        fig: the finished figure.
+        path: output PNG path (parents created).
+        tight: skip the tight_layout call when the caller used its own
+            (e.g. a rect that reserves space for a suptitle).
+    """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
+    if tight:
+        fig.tight_layout()
     fig.savefig(path)
     plt.close(fig)
 
@@ -112,18 +121,19 @@ def plot_q0_accuracy(metrics: pd.DataFrame, path: str | Path) -> None:
         fig, ax = plt.subplots(figsize=(6.5, 0.9 * len(order) + 1.2))
         _grouped_percent_bars(ax, [label for _, label in order], series)
         ax.axvline(50, color=RB_GRAY, linestyle="--", linewidth=1)
-        ax.set_xlabel("correctly labelled (%) — dashed line: coin flip")
+        ax.set_xlabel("correctly labelled (%); dashed line = coin flip")
         ax.set_title("Can the judges tell human from AI? (zero-shot)")
         _save(fig, path)
 
 
-def plot_share_yes(metrics: pd.DataFrame, flag: str, title: str, path: str | Path) -> None:
-    """Q1/Q2 figure: share of 'yes' per scope, one bar per judge model.
+def plot_yes_counts(metrics: pd.DataFrame, flag: str, title: str, path: str | Path) -> None:
+    """Q1/Q2 figure: raw yes-COUNTS per person, one bar per judge model.
 
-    Every judge scored the same held-out items, so the grouped bars are a
-    direct head-to-head: scope groups (overall, each person, each category)
-    on the y-axis, one consistently colored bar per judge, legend with the
-    model names. The pooled row is excluded — the judges ARE the story.
+    Counts, not percentages (author decision): with 4 held-out questions per
+    person a share reads like a graded "how much it captures" — misleading
+    for a yes/no verdict. Person groups on the y-axis, one consistently
+    colored bar per judge, integer axis 0..n. The pooled total goes into the
+    x-label; the volatility caveat is printed on the figure.
 
     Args:
         metrics: tidy frame from output/eda_metrics.csv.
@@ -131,20 +141,41 @@ def plot_share_yes(metrics: pd.DataFrame, flag: str, title: str, path: str | Pat
         title: figure title (action-style, states the question).
         path: output PNG path.
     """
-    rows = metrics[(metrics["metric"] == f"{flag}_share_yes") & (metrics["model"] != "pooled")]
-    # Scope order as written by compute_metrics: overall, persons, categories.
-    scopes = list(dict.fromkeys(rows["scope"]))
-    labels = [scope.split(":", 1)[-1] for scope in scopes]
-    series = {
-        model: [part.set_index("scope").loc[scope, "value"] * 100 for scope in scopes]
-        for model, part in rows.groupby("model")
-    }
+    rows = metrics[metrics["metric"] == f"{flag}_yes_count"]
+    person_rows = rows[rows["scope"].str.startswith("person_id:")]
+    labels = sorted(person_rows["scope"].str.split(":", n=1).str[-1].unique())
+    n_per_person = int(person_rows["n"].iloc[0])
+    colors = model_colors(sorted(person_rows["model"].unique()))
+    pooled = rows[(rows["scope"] == "overall") & (rows["model"] == "pooled")].iloc[0]
 
     with plt.rc_context(STYLE):
-        fig, ax = plt.subplots(figsize=(6.5, 0.75 * len(labels) + 1.2))
-        _grouped_percent_bars(ax, labels, series)
-        ax.set_xlabel("judged 'yes' (%)")
+        fig, ax = plt.subplots(figsize=(6.5, 0.9 * len(labels) + 1.4))
+        n_series = len(colors)
+        group_height = 0.8 / n_series
+        for i, (model, color) in enumerate(colors.items()):
+            part = person_rows[person_rows["model"] == model].set_index("scope")
+            values = [int(part.loc[f"person_id:{p}", "value"]) for p in labels]
+            positions = [j + (i - (n_series - 1) / 2) * group_height
+                         for j in range(len(labels))]
+            ax.barh(positions, values, height=group_height * 0.85,
+                    color=color, label=model)
+            for pos, value in zip(positions, values):
+                ax.text(value + 0.05, pos, str(value), va="center",
+                        color=RB_BLACK, fontsize=8)
+        ax.set_yticks(range(len(labels)), labels)
+        ax.invert_yaxis()
+        ax.set_xlim(0, n_per_person + 0.6)
+        ax.set_xticks(range(n_per_person + 1))
+        ax.grid(axis="x", color=RB_GRID, linewidth=0.6)
+        ax.set_axisbelow(True)
+        ax.set_xlabel(
+            f"questions judged 'yes' (of {n_per_person} per person); "
+            f"overall {int(pooled['value'])} of {int(pooled['n'])} verdicts"
+        )
         ax.set_title(title)
+        ax.legend(loc="lower right", fontsize=8)
+        fig.text(0.02, 0.01, "n = 4 questions x 3 people; volatile, directional only",
+                 fontsize=7, color=RB_GRAY)
         _save(fig, path)
 
 
@@ -171,6 +202,6 @@ def plot_style_features(features: pd.DataFrame, path: str | Path) -> None:
             ax.grid(axis="y", color=RB_GRID, linewidth=0.6)
             ax.set_axisbelow(True)
         fig.suptitle("How the answers sound: style features, human vs AI mean (deterministic, no LLM)",
-                     x=0.02, ha="left", fontsize=11, fontweight="bold")
-        fig.tight_layout(rect=(0, 0, 1, 0.95))
-        _save(fig, path)
+                     x=0.02, ha="left", fontsize=11)
+        fig.tight_layout(rect=(0, 0, 1, 0.95))  # rect reserves the suptitle row
+        _save(fig, path, tight=False)

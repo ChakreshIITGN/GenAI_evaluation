@@ -21,8 +21,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import yaml
 from bertopic import BERTopic
+from sklearn.feature_extraction.text import CountVectorizer
 from umap import UMAP
 
+from src.embed import _model as embedding_model
 from src.plots import RB_BLUE, RB_GREEN, RB_GRID, STYLE, _save
 
 _CONFIG: dict = yaml.safe_load(Path("config.yaml").read_text())
@@ -62,13 +64,23 @@ def fit_topics(sentences: list[str], sides: list[str]) -> pd.DataFrame:
         One row per topic (outliers, topic -1, excluded): topic_id, name
         (top words), n_human, n_ai, human_share, classification.
     """
-    # BERTopic's own UMAP defaults, plus a random_state — seeding only,
-    # no tuning (plan §2c: let the library handle everything else).
+    # BERTopic's UMAP defaults except a smaller neighborhood (the default 15
+    # over-smooths ~200 short sentences into one cluster) and a random_state.
     umap_model = UMAP(
-        n_neighbors=15, n_components=5, min_dist=0.0, metric="cosine",
-        random_state=_BT_CFG["seed"],
+        n_neighbors=_BT_CFG["n_neighbors"], n_components=5, min_dist=0.0,
+        metric="cosine", random_state=_BT_CFG["seed"],
     )
-    model = BERTopic(min_topic_size=_BT_CFG["min_topic_size"], umap_model=umap_model)
+    # Stopwords affect only topic NAMING (the c-TF-IDF vectorizer), not the
+    # clustering itself — without this, topic names are "and, the, to".
+    vectorizer = CountVectorizer(stop_words="english")
+    model = BERTopic(
+        min_topic_size=_BT_CFG["min_topic_size"],
+        umap_model=umap_model,
+        vectorizer_model=vectorizer,
+        # Same embedder as Layer 1a (mpnet, already loaded) — stronger than
+        # BERTopic's default MiniLM on short conversational sentences.
+        embedding_model=embedding_model(),
+    )
     topics, _ = model.fit_transform(sentences)
 
     frame = pd.DataFrame({"topic": topics, "side": sides})
@@ -88,6 +100,50 @@ def fit_topics(sentences: list[str], sides: list[str]) -> pd.DataFrame:
             }
         )
     return pd.DataFrame(rows)
+
+
+def is_degenerate(topics: pd.DataFrame) -> bool:
+    """Honest-try guard: does this fit carry any usable topic structure?
+
+    Degenerate when there are fewer than min_topics topics, or when a single
+    topic holds more than max_topic_share of all assigned sentences (one
+    mega-cluster). A degenerate fit means KPI 2 is NOT computable and must
+    be reported as such — never as 'all topics covered'.
+    """
+    if len(topics) < _BT_CFG["min_topics"]:
+        return True
+    sizes = topics["n_human"] + topics["n_ai"]
+    return bool(sizes.max() / sizes.sum() > _BT_CFG["max_topic_share"])
+
+
+def plot_sentence_map(sentences: list[str], sides: list[str], path: str | Path) -> None:
+    """The cluster map: every sentence as a dot in 2D semantic space.
+
+    Embeds all sentences (same model as Layer 1a, loaded once), projects to
+    2D with seeded UMAP, and colors human vs AI. If the two clouds occupy
+    the same regions, the simulations talk about the same things; separated
+    clouds mean blind spots / phantoms. UMAP axes are unitless — only
+    relative position carries meaning, and the axis labels say so.
+    """
+    vectors = embedding_model().encode(sentences, normalize_embeddings=True)
+    coords = UMAP(
+        n_components=2, metric="cosine", random_state=_BT_CFG["seed"]
+    ).fit_transform(vectors)
+
+    with plt.rc_context(STYLE):
+        fig, ax = plt.subplots(figsize=(6.5, 5))
+        for side, color in (("human", RB_BLUE), ("ai", RB_GREEN)):
+            mask = [s == side for s in sides]
+            ax.scatter(coords[mask, 0], coords[mask, 1], s=22, color=color,
+                       alpha=0.75, edgecolors="white", linewidths=0.4,
+                       label="human" if side == "human" else "AI")
+        ax.set_xlabel("UMAP dimension 1 (unitless)")
+        ax.set_ylabel("UMAP dimension 2 (unitless)")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title("Semantic map of all sentences: do the clouds overlap?")
+        ax.legend(loc="lower right", fontsize=8)
+        _save(fig, path)
 
 
 def plot_topic_map(topic_frame: pd.DataFrame, path: str | Path) -> None:

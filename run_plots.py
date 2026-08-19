@@ -13,7 +13,7 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from src.plots import plot_q0_accuracy, plot_share_yes, plot_style_features
+from src.plots import plot_q0_accuracy, plot_style_features, plot_yes_counts
 
 CONFIG: dict = yaml.safe_load(Path("config.yaml").read_text())
 
@@ -27,14 +27,14 @@ def main() -> None:
     features = pd.read_csv(results_dir / "measured_features.csv")
 
     plot_q0_accuracy(metrics, plots_dir / "eda_q0_accuracy.png")
-    plot_share_yes(
+    plot_yes_counts(
         metrics, "captures_personality",
-        "Does the AI capture the person? (share judged yes)",
+        "Does the AI capture the person? (yes-verdicts per person)",
         plots_dir / "eda_q1_personality.png",
     )
-    plot_share_yes(
+    plot_yes_counts(
         metrics, "captures_content",
-        "Does the AI capture the content? (share judged yes)",
+        "Does the AI capture the content? (yes-verdicts per person)",
         plots_dir / "eda_q2_content.png",
     )
     plot_style_features(features, plots_dir / "eda_style_features.png")

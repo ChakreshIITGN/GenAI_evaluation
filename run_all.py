@@ -30,7 +30,7 @@ import pandas as pd
 import yaml
 
 from run_eda import measure_features, normalise
-from src.cluster import fit_topics, plot_topic_map
+from src.cluster import fit_topics, is_degenerate, plot_sentence_map, plot_topic_map
 from src.embed import pair_similarity
 from src.entail import coverage_fidelity
 from src.judges import (
@@ -42,7 +42,7 @@ from src.judges import (
 from src.kpis import content_fidelity_table, rag_matrix, segment_coverage_summary
 from src.load import load_answers
 from src.segment import split_sentences
-from src.style_compare import paired_differences, plot_dumbbell
+from src.style_compare import paired_differences
 
 CONFIG: dict = yaml.safe_load(Path("config.yaml").read_text())
 
@@ -69,8 +69,8 @@ def run_content_layer(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def run_topic_layer(df: pd.DataFrame) -> pd.DataFrame:
-    """Layer 2c: pool all sentences (tagged by side) and fit one BERTopic."""
+def pool_sentences(df: pd.DataFrame) -> tuple[list[str], list[str]]:
+    """All sentences of both sides, pooled and tagged, for Layer 2c."""
     sentences: list[str] = []
     sides: list[str] = []
     for row in df.itertuples():
@@ -78,8 +78,7 @@ def run_topic_layer(df: pd.DataFrame) -> pd.DataFrame:
             units = split_sentences(text)
             sentences += units
             sides += [side] * len(units)
-    print(f"  2c fitting BERTopic on {len(sentences)} sentences…")
-    return fit_topics(sentences, sides)
+    return sentences, sides
 
 
 def run_individuation(df: pd.DataFrame, judges: list[str]) -> pd.DataFrame:
@@ -168,20 +167,22 @@ def main() -> None:
 
     df = load_answers(CONFIG["paths"]["data"])
 
-    print("Layer 1b — style features, paired differences, dumbbell…")
+    print("Layer 1b — style features and paired differences…")
     features = measure_features(df)
     features.to_csv(results_dir / "measured_features.csv", index=False)
     paired_differences(features).to_csv(results_dir / "style_differences.csv", index=False)
-    plot_dumbbell(features, plots_dir / "style_dumbbell.png")
 
     print("Layers 1a + 2a/2b — similarity and NLI coverage/fidelity…")
     pairs = run_content_layer(df)
     pairs.to_csv(results_dir / "pairs_content.csv", index=False)
 
-    print("Layer 2c — topic map…")
-    topics = run_topic_layer(df)
+    print("Layer 2c — topic map and sentence cluster map…")
+    sentences, sides = pool_sentences(df)
+    print(f"  2c fitting BERTopic on {len(sentences)} sentences…")
+    topics = fit_topics(sentences, sides)
     topics.to_csv(results_dir / "topics.csv", index=False)
     plot_topic_map(topics, plots_dir / "topic_map.png")
+    plot_sentence_map(sentences, sides, plots_dir / "sentence_map.png")
 
     print(f"Layer 3 — judge panel ({', '.join(judges)})…")
     individuation = run_individuation(df, judges)
@@ -190,12 +191,21 @@ def main() -> None:
     believability.to_csv(results_dir / "ratings_believability.csv", index=False)
 
     print("KPIs and RAG matrix…")
+    # Pooled over categories, split by person (author decision: 3–15 pairs
+    # per category is too small for a robust verdict; reported as such).
     content_fidelity_table(pairs).to_csv(results_dir / "kpi1_content_fidelity.csv", index=False)
     rag = rag_matrix(pairs, thresholds["green"], thresholds["amber"])
     rag.to_csv(results_dir / "rag_matrix.csv", index=False)
     kpi3 = judge_summaries(individuation, believability)
     kpi3.to_csv(results_dir / "kpi3_believability.csv", index=False)
-    kpi2 = segment_coverage_summary(topics)
+    if is_degenerate(topics):
+        # Honest reporting: a collapsed clustering must never read as
+        # "all topics covered" — KPI 2 is simply not computable here.
+        kpi2 = {"computable": False,
+                "note": "topic model degenerate at this n; KPI 2 not computable"}
+        print("WARNING: topic model is degenerate — KPI 2 reported as not computable.")
+    else:
+        kpi2 = {"computable": True} | segment_coverage_summary(topics)
 
     manifest = {
         "run_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

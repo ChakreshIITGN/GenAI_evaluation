@@ -43,7 +43,7 @@ def test_rag_status_boundaries_inclusive() -> None:
 
 def test_content_fidelity_table_means_and_sums() -> None:
     """Overall row: coverage 0.5, fidelity 0.55, contradictions summed to 3."""
-    table = content_fidelity_table(make_pairs()).set_index("scope")
+    table = content_fidelity_table(make_pairs(), by="category").set_index("scope")
     assert table.loc["overall", "coverage"] == pytest.approx(0.5)
     assert table.loc["overall", "fidelity"] == pytest.approx(0.55)
     assert table.loc["overall", "contradictions"] == 3
@@ -51,9 +51,19 @@ def test_content_fidelity_table_means_and_sums() -> None:
     assert table.loc["brand", "n_pairs"] == 2
 
 
+def test_content_fidelity_table_groups_by_person_by_default() -> None:
+    """Default grouping is per person (author decision: categories too small)."""
+    pairs = make_pairs()
+    pairs["person_id"] = ["p1", "p1", "p2", "p2"]
+    table = content_fidelity_table(pairs)
+    assert set(table["scope"]) == {"overall", "p1", "p2"}
+
+
 def test_rag_matrix_statuses() -> None:
     """shopping f1 ≈ 0.75 -> green; brand f1 = 0.3 -> red (0.70/0.40 thresholds)."""
-    matrix = rag_matrix(make_pairs(), green=0.70, amber=0.40).set_index("category")
+    matrix = rag_matrix(
+        make_pairs(), green=0.70, amber=0.40, by="category"
+    ).set_index("category")
     assert matrix.loc["shopping", "status"] == "green"
     assert matrix.loc["brand", "status"] == "red"
     assert "overall" not in matrix.index

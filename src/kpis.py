@@ -34,12 +34,19 @@ def rag_status(value: float, green: float, amber: float) -> str:
     return "red"
 
 
-def content_fidelity_table(pairs: pd.DataFrame) -> pd.DataFrame:
-    """KPI 1 — coverage/fidelity summary, one row overall + one per category.
+def content_fidelity_table(pairs: pd.DataFrame, by: str = "person_id") -> pd.DataFrame:
+    """KPI 1 — coverage/fidelity summary, one row overall + one per group.
+
+    Grouping defaults to PERSON (author decision): per-category groups hold
+    only 3–15 pairs in this data — too small for a robust verdict — so
+    results are pooled over categories and split by person instead. The
+    aggregation choice is reported in the deliverables.
 
     Args:
         pairs: per-pair Layer 2b results with columns
-            category, coverage, fidelity, contradictions.
+            coverage, fidelity, contradictions, and the `by` column.
+        by: grouping column ('person_id' default; 'category' possible at
+            larger n).
 
     Returns:
         Rows with scope, coverage, fidelity, f1 (harmonic mean of the two
@@ -59,7 +66,7 @@ def content_fidelity_table(pairs: pd.DataFrame) -> pd.DataFrame:
         }
 
     rows = [summarise("overall", pairs)]
-    rows += [summarise(cat, part) for cat, part in pairs.groupby("category")]
+    rows += [summarise(str(group), part) for group, part in pairs.groupby(by)]
     return pd.DataFrame(rows)
 
 
@@ -83,14 +90,17 @@ def segment_coverage_summary(topics: pd.DataFrame) -> dict[str, float | int]:
     }
 
 
-def rag_matrix(pairs: pd.DataFrame, green: float, amber: float) -> pd.DataFrame:
-    """The recommendation: green/amber/red per question category.
+def rag_matrix(
+    pairs: pd.DataFrame, green: float, amber: float, by: str = "person_id"
+) -> pd.DataFrame:
+    """The recommendation: green/amber/red per group (person by default).
 
-    Status is driven by the harmonic mean of category coverage and fidelity
+    Status is driven by the harmonic mean of group coverage and fidelity
     (both must be decent — one cannot buy the other), with the contradiction
-    count carried beside it as the danger flag.
+    count carried beside it as the danger flag. Grouping follows
+    content_fidelity_table: pooled over categories, split by person.
     """
-    table = content_fidelity_table(pairs)
-    table = table[table["scope"] != "overall"].rename(columns={"scope": "category"})
+    table = content_fidelity_table(pairs, by=by)
+    table = table[table["scope"] != "overall"].rename(columns={"scope": by})
     table["status"] = [rag_status(f1, green, amber) for f1 in table["f1"]]
     return table.reset_index(drop=True)

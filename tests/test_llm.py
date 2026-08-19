@@ -85,6 +85,13 @@ def test_fenced_json_is_unwrapped(fake_llm: dict) -> None:
     assert fake_llm["calls"] == 1  # no repair round needed
 
 
+def test_schema_block_shows_example_instance() -> None:
+    """The prompt shows a filled example, guarding against schema echoing."""
+    block = llm._schema_block(Verdict)
+    assert '{"ok": true, "reason": "..."}' in block
+    assert "Do NOT return the schema itself" in block
+
+
 def test_load_prompt_reads_templates() -> None:
     """Prompt templates load from user_prompts/ with placeholders intact."""
     template = llm.load_prompt("eda/is_ai")

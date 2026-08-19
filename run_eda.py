@@ -124,20 +124,11 @@ def run_q2(df: pd.DataFrame, split: dict, judges: list[str]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def share_rows(frame: pd.DataFrame, flag: str, group: str, model: str) -> list[dict]:
-    """Share of True in `flag` per value of `group`, as tidy metric rows."""
-    return [
-        {"metric": f"{flag}_share_yes", "scope": f"{group}:{value}", "model": model,
-         "value": part[flag].mean(), "n": len(part)}
-        for value, part in frame.groupby(group)
-    ]
-
-
 def compute_metrics(q0: pd.DataFrame, q1: pd.DataFrame, q2: pd.DataFrame) -> pd.DataFrame:
     """Tidy metrics, one block per judge model on identical items.
 
-    Q0: accuracy overall + per side, per model. Q1/Q2: share of yes overall,
-    per person and per category, per model, plus one pooled overall row.
+    Q0: accuracy overall + per side, per model (a genuine rate over 60 items).
+    Q1/Q2: yes-COUNTS per person and per judge (value = count, n = items).
     All judges score the same items, so rows are directly comparable.
     """
     rows = []
@@ -148,14 +139,20 @@ def compute_metrics(q0: pd.DataFrame, q1: pd.DataFrame, q2: pd.DataFrame) -> pd.
         for side, side_part in part.groupby("side"):
             rows.append({"metric": "q0_accuracy", "scope": f"side:{side}", "model": model,
                          "value": side_part["correct"].mean(), "n": len(side_part)})
+    # Q1/Q2 are reported as raw yes-COUNTS, not percentages (author decision):
+    # at 4 held-out questions per person a share reads like a graded "how
+    # much it captures", which it is not. No category split — 12 items are
+    # too few to slice twice. Volatile measure; stated on the figures.
     for frame, flag in ((q1, "captures_personality"), (q2, "captures_content")):
-        rows.append({"metric": f"{flag}_share_yes", "scope": "overall", "model": "pooled",
-                     "value": frame[flag].mean(), "n": len(frame)})
+        rows.append({"metric": f"{flag}_yes_count", "scope": "overall", "model": "pooled",
+                     "value": int(frame[flag].sum()), "n": len(frame)})
         for model, part in frame.groupby("model"):
-            rows.append({"metric": f"{flag}_share_yes", "scope": "overall", "model": model,
-                         "value": part[flag].mean(), "n": len(part)})
-            rows += share_rows(part, flag, "person_id", model)
-            rows += share_rows(part, flag, "category", model)
+            rows.append({"metric": f"{flag}_yes_count", "scope": "overall", "model": model,
+                         "value": int(part[flag].sum()), "n": len(part)})
+            for person, person_part in part.groupby("person_id"):
+                rows.append({"metric": f"{flag}_yes_count", "scope": f"person_id:{person}",
+                             "model": model, "value": int(person_part[flag].sum()),
+                             "n": len(person_part)})
     return pd.DataFrame(rows)
 
 

@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.plots import plot_q0_accuracy, plot_share_yes, plot_style_features
+from src.plots import plot_q0_accuracy, plot_style_features, plot_yes_counts
 from src.stylometric import Stylometric
 
 
@@ -24,14 +24,14 @@ def make_metrics() -> pd.DataFrame:
             {"metric": "q0_accuracy", "scope": "side:ai", "model": model, "value": 0.70, "n": 30},
         ]
     for flag in ("captures_personality", "captures_content"):
-        rows.append({"metric": f"{flag}_share_yes", "scope": "overall", "model": "pooled",
-                     "value": 0.5, "n": 24})
+        rows.append({"metric": f"{flag}_yes_count", "scope": "overall", "model": "pooled",
+                     "value": 6, "n": 16})
         for model in ("model-a", "model-b"):
-            rows += [
-                {"metric": f"{flag}_share_yes", "scope": "overall", "model": model, "value": 0.5, "n": 12},
-                {"metric": f"{flag}_share_yes", "scope": "person_id:p1", "model": model, "value": 0.75, "n": 4},
-                {"metric": f"{flag}_share_yes", "scope": "category:shopping", "model": model, "value": 1.0, "n": 6},
-            ]
+            rows.append({"metric": f"{flag}_yes_count", "scope": "overall", "model": model,
+                         "value": 3, "n": 8})
+            for person, count in (("p1", 3), ("p2", 0)):
+                rows.append({"metric": f"{flag}_yes_count", "scope": f"person_id:{person}",
+                             "model": model, "value": count, "n": 4})
     return pd.DataFrame(rows)
 
 
@@ -58,11 +58,11 @@ def test_q0_accuracy_writes_png(tmp_path: Path) -> None:
     assert_png(out)
 
 
-def test_share_yes_writes_png(tmp_path: Path) -> None:
-    """Share-yes figure works for both Q1 and Q2 metrics."""
+def test_yes_counts_writes_png(tmp_path: Path) -> None:
+    """Yes-count figure works for both Q1 and Q2 metrics, incl. zero counts."""
     for flag in ("captures_personality", "captures_content"):
         out = tmp_path / f"{flag}.png"
-        plot_share_yes(make_metrics(), flag, "title", out)
+        plot_yes_counts(make_metrics(), flag, "title", out)
         assert_png(out)
 
 
