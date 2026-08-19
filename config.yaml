@@ -34,3 +34,19 @@ eda:
   # and every judge: these question_ids are held out and judged (Q1, Q2);
   # the person's other questions are the Q1 context. Q0 uses no split.
   held_out_questions: [7, 8, 9, 10]
+
+eval:
+  # Layer 1a — semantic similarity baseline (topic-dominated, not a KPI).
+  embedding_model: "sentence-transformers/all-mpnet-base-v2"
+  # Layer 2a — sentence segmentation model (spaCy).
+  spacy_model: "en_core_web_sm"
+  # Layer 2b — NLI entailment checker for coverage/fidelity.
+  nli_model: "cross-encoder/nli-deberta-v3-base"
+  # Layer 2c — BERTopic: defaults, small min size at ~400 sentences, seeded.
+  bertopic:
+    min_topic_size: 5
+    seed: 42
+  # RAG thresholds for the category matrix — PROVISIONAL at n=30.
+  rag_thresholds:
+    green: 0.70   # mean coverage/fidelity at or above -> green
+    amber: 0.40   # between amber and green -> amber; below -> red

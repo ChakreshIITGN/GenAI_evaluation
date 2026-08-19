@@ -21,6 +21,11 @@ dependencies = [
     "python-dotenv>=1.0",  # loads the Ollama cloud API key from .env
     "lexicalrichness>=0.5", # MTLD lexical diversity (Stylometric)
     "nltk>=3.9",            # VADER sentiment (Stylometric)
+    # eval branch (plan §3): all named in the master plan
+    "spacy>=3.8",                 # sentence segmentation (Layer 2a)
+    "sentence-transformers>=3.3", # embeddings (1a) + NLI cross-encoder (2b)
+    "bertopic>=0.16",             # topic map (2c)
+    "krippendorff>=0.8",          # judge-panel reliability (Layer 3)
 ]
 
 [dependency-groups]

@@ -229,3 +229,6 @@ data/
 cache/
 output/
 archive/
+
+# Claude Code session/worktree metadata
+.claude/
