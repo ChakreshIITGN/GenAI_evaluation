@@ -22,6 +22,8 @@ user_prompts/
 | `eda/is_ai.txt` | `judge_is_ai` (EDA Q0) | Zero-shot: is this single answer human or AI? No context, no examples. | `{answer}` |
 | `eda/personality.txt` | `judge_personality` (EDA Q1) | Given a person's own example answers, does the AI answer capture their personality/nuance? | `{context_answers}`, `{ai_answer}` |
 | `eda/content.txt` | `judge_content` (EDA Q2) | Pairwise: does the AI answer capture the content of the human answer to the same question? | `{question}`, `{human_answer}`, `{ai_answer}` |
+| `judges/individuation.txt` | `judge_individuation` (Layer 3, Judge A) | Persona sketch + pair: recognisably THIS person or a generic segment member? Score −1…+1. | `{persona_answers}`, `{human_answer}`, `{ai_answer}` |
+| `judges/believability.txt` | `judge_believability` (Layer 3, Judge B) | Blind: one unlabelled answer — how human does it read? Score −1…+1. | `{answer}` |
 
 Editing rules:
 - Keep placeholders exactly as named — code fills them by keyword.

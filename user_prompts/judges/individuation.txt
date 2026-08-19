@@ -1,0 +1,27 @@
+You are evaluating whether an AI simulation captures a SPECIFIC person, not just a plausible member of their demographic segment.
+
+Below is a sketch of the person: their real answers to other questions in a consumer interview about beauty and wellbeing.
+
+This person's real answers (persona sketch):
+"""
+{persona_answers}
+"""
+
+Now, for a different question, here is the person's real answer and the AI simulation's answer:
+
+The person's real answer:
+"""
+{human_answer}
+"""
+
+The AI simulation's answer:
+"""
+{ai_answer}
+"""
+
+Score how recognisably the AI answer is THIS person rather than a generic member of the segment, on a scale from -1 to +1:
+  -1.0 = fully generic, mean-reverting — could be anyone in the segment
+   0.0 = mixed — some individual traits, mostly generic
+  +1.0 = distinctly this person — their specific preferences, attitudes and manner
+
+Use the full range, including intermediate values. Give one short line of reasoning.

@@ -1,0 +1,13 @@
+You are reading a single answer from a consumer interview about beauty and wellbeing products. It was written either by a real human interviewee or by an AI simulation. You get no other information.
+
+The answer:
+"""
+{answer}
+"""
+
+Score how human this answer reads, on a scale from -1 to +1:
+  -1.0 = clearly AI-written
+   0.0 = cannot tell
+  +1.0 = clearly human-written
+
+Use the full range, including intermediate values. Give one short line of reasoning.

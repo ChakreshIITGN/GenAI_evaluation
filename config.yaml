@@ -36,6 +36,9 @@ eda:
   held_out_questions: [7, 8, 9, 10]
 
 eval:
+  # Layer 3 — judge panel: different model families (generator unknown ->
+  # diversify against self-preference). Same panel as the EDA judges.
+  judges: ["gpt-oss:120b", "deepseek-v4-flash", "glm-5.2"]
   # Layer 1a — semantic similarity baseline (topic-dominated, not a KPI).
   embedding_model: "sentence-transformers/all-mpnet-base-v2"
   # Layer 2a — sentence segmentation model (spaCy).
