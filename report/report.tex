@@ -78,8 +78,8 @@ specifics are false, which is why a measurement layer is required.
 \textbf{Exploratory judgements agree.} Three judge families each scored the
 same 12 held-out items (q7 to q10 for every person), so one verdict is one
 judge on one question. Personality capture: 7 of 36 verdicts yes (4, 2, 1
-per judge; Figure~\ref{fig:q1}). Content capture: 9 of 36 verdicts yes
-(4, 3, 2 per judge; Figure~\ref{fig:q2}). Zero-shot human-or-AI accuracy is
+per judge). Content capture: 9 of 36 verdicts yes
+(4, 3, 2 per judge). Zero-shot human-or-AI accuracy is
 0.58 to 0.78 per judge and asymmetric: every judge recognises humans better
 (0.77 to 0.90) than it catches simulations (0.30 to 0.67;
 Figure~\ref{fig:q0}).
@@ -93,41 +93,23 @@ The simulations sell; the humans shrug.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.52\columnwidth]{eda_q0_accuracy.png}
+  \includegraphics[width=\columnwidth]{eda_q0_accuracy.png}
   \caption{Zero-shot detection accuracy per judge model. Bars show the
   share of the 60 answers each judge labelled correctly, overall and by
   true side; the dashed line marks the 50\% coin-flip level. All three
   judges recognise humans better than they catch simulations.}
   \label{fig:q0}
 \end{figure}
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
-  \includegraphics[width=0.52\columnwidth]{eda_q1_personality.png}
-  \caption{Personality-capture verdicts on the held-out questions (q7 to
-  q10). Bars count yes verdicts per person, out of 4 per judge model. Only
-  7 of 36 verdicts find the person's voice in the AI answer, and most
-  concentrate on one person.}
-  \label{fig:q1}
-\end{figure}
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.52\columnwidth]{eda_q2_content.png}
-  \caption{Content-capture verdicts on the held-out questions (q7 to q10).
-  Bars count yes verdicts per person, out of 4 per judge model. Only 9 of
-  36 verdicts find the human answer's content in the AI answer, almost all
-  for a single person.}
-  \label{fig:q2}
-\end{figure}
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.52\columnwidth]{eda_style_features.png}
+  \includegraphics[width=0.92\textwidth]{eda_style_features.png}
   \caption{Deterministic style features, measured on every answer. Each
   panel compares the human mean (blue) with the AI mean (green) for one of
   the seven features, over 30 answers per side. The AI writes longer, more
   varied, less hedged and far more positive text than the people it
   simulates.}
   \label{fig:style}
-\end{figure}
+\end{figure*}
 \section{Methodology}
 We started from evaluation criteria where each criterion led to one
 metric. 
@@ -249,7 +231,7 @@ but supporting observation is that the LLM components of the evaluation
 itself, the judges, were not run-to-run stable despite temperature 0 and
 fixed seeds; if LLMs cannot judge consistently, relying on them to
 \emph{be} the consumer is a larger leap. The stability of the simulations
-themselves was not testable with a single generation per question and is
+themselves was not testable with a single generation per question and isx`
 our first data request.
 
 \bibliographystyle{apalike}
