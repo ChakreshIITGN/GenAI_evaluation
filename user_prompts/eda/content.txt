@@ -1,0 +1,18 @@
+You are evaluating whether an AI simulation of a person reproduces the content of that person's real interview answer.
+
+Interview question:
+"""
+{question}
+"""
+
+The person's real answer:
+"""
+{human_answer}
+"""
+
+The AI simulation's answer to the same question:
+"""
+{ai_answer}
+"""
+
+Decide whether the AI answer captures the content of the real answer — the same substance, preferences and facts, regardless of writing style. Give one short line of reasoning.

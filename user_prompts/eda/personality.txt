@@ -1,0 +1,15 @@
+You are evaluating whether an AI simulation of a specific person captures that person's personality.
+
+Below are real answers this person gave in a consumer interview about beauty and wellbeing. Use them to form a picture of how this person thinks and speaks.
+
+This person's real answers (context):
+"""
+{context_answers}
+"""
+
+Now here is an answer produced by an AI simulation of this same person, to a different question:
+"""
+{ai_answer}
+"""
+
+Decide whether the AI answer captures this person's nuance and personality — their tone, attitudes, and way of expressing themselves — rather than sounding like a generic person. Give one short line of reasoning.

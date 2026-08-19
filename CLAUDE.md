@@ -23,7 +23,13 @@ Evaluate how faithfully LLM-based human simulations (built from an interview) mi
 - `eval` — second. Full pipeline: Layers 1–3, KPIs, figures, report, deck (plan §3–§4, §8). Then app + Docker (plan §9).
 
 ## Current state
-we are the `main` branch nothing is done yet. Start with   `eda`
+`eda` branch COMPLETE (2026-08-19): plumbing (load/llm/cache/Pydantic), three
+EDA judgements run with a 3-model judge panel (gpt-oss:120b, deepseek-v4-flash,
+glm-5.2) on one fixed held-out set (q7–10), lowercased judge inputs,
+Stylometric class, RB-palette plots, report draft in report/. Run 1 archived
+in archive/. Key deviations from plan, all logged in docs/DECISIONS.md:
+fixed split instead of seeded (author), prompts in user_prompts/, outputs in
+output/ not results/. Next: `eval` branch — Layers 1–3, KPIs, figures.
 
 ## First task (on `eda`)
 Create, in this order, and run `pytest` after each:

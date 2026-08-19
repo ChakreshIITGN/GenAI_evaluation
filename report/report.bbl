@@ -1,0 +1,16 @@
+\begin{thebibliography}{}
+
+\bibitem[Hyland, 2005]{hyland2005metadiscourse}
+Hyland, K. (2005).
+\newblock {\em Metadiscourse: Exploring Interaction in Writing}.
+\newblock Continuum, London.
+\newblock Source of the hedging lexicon.
+
+\bibitem[Park et~al., 2024]{park2024generative}
+Park, J.~S., Zou, C.~Q., Shaw, A., Hill, B.~M., Cai, C., Morris, M.~R., Willer,
+  R., Liang, P., and Bernstein, M.~S. (2024).
+\newblock Generative agent simulations of 1,000 people.
+\newblock arXiv:2411.10109; later retitled ``LLM Agents Grounded in
+  Self-Reports Enable General-Purpose Simulation of Individuals''.
+
+\end{thebibliography}

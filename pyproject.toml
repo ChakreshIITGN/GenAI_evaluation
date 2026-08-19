@@ -1,12 +1,30 @@
+# pyproject.toml — RB GenAI evaluation
+# Pinned project dependencies, managed with uv.
+# Author: Dr. Chakresh Kr. Singh
+# Prepared for Roland Berger (RB GenAI evaluation).
+
 [project]
 name = "genai-evaluation"
 version = "0.1.0"
-description = "Add your description here"
+description = "Evaluation of LLM-based human simulations against real consumer answers (Roland Berger)"
 readme = "README.md"
+authors = [{ name = "Dr. Chakresh Kr. Singh" }]
 requires-python = ">=3.13"
 dependencies = [
     "ollama>=0.6.2",
     "pandas>=3.0.5",
     "seaborn>=0.13.2",
     "tiktoken>=0.14.0",
+    "pydantic>=2.9",
+    "pyyaml>=6.0",
+    "openpyxl>=3.1",       # pandas engine for reading the .xlsx data file
+    "python-dotenv>=1.0",  # loads the Ollama cloud API key from .env
+    "lexicalrichness>=0.5", # MTLD lexical diversity (Stylometric)
+    "nltk>=3.9",            # VADER sentiment (Stylometric)
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.8",
 ]

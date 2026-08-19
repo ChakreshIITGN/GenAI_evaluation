@@ -222,3 +222,10 @@ data/
 
 # macOS
 .DS_Store
+
+# confidential-derived artifacts (public repo): cache stores full answers inside
+# prompts; output/ and archive/ contain judge reasons quoting them. Delivered in
+# the private zip instead (plan §7 data note).
+cache/
+output/
+archive/

@@ -1,0 +1,36 @@
+# config.yaml — RB GenAI evaluation
+# Single place for models, seeds, paths and split sizes. No magic numbers in code.
+# Author: Dr. Chakresh Kr. Singh
+# Prepared for Roland Berger (RB GenAI evaluation).
+
+llm:
+  # Ollama cloud, called directly with an API key (OLLAMA_API_KEY in .env).
+  # To use a local signed-in Ollama daemon instead, set host to
+  # http://localhost:11434 and model to gpt-oss:120b-cloud.
+  host: "https://ollama.com"
+  model: "gpt-oss:120b"
+  temperature: 0        # deterministic judgements
+  seed: 42              # fixed seed for reproducibility
+  cache_dir: "cache/eda"  # disk cache; committed so results reproduce without keys
+
+paths:
+  data: "data/RB_GenAI_Datatest.xlsx"   # confidential, gitignored
+  prompts: "user_prompts"               # all user-editable prompts live here
+  results: "output"                     # all run outputs (CSV/JSON) land here
+  plots: "output/plots"                 # all figures land here
+
+eda:
+  # Judge inputs are lowercased so orthography (caps/typos) cannot drive
+  # verdicts — we cannot tell transcription artefacts from real style.
+  # Deterministic style features still run on the raw text.
+  lowercase_judge_inputs: true
+
+  # Judge panel: three model families. EVERY judge answers EVERY question
+  # (Q0 on all answers; Q1/Q2 on the same held-out set) so their verdicts
+  # are directly comparable and we can measure inter-judge agreement.
+  judges: ["gpt-oss:120b", "deepseek-v4-flash", "glm-5.2"]
+
+  # One fixed, explainable within-person split, identical for every person
+  # and every judge: these question_ids are held out and judged (Q1, Q2);
+  # the person's other questions are the Q1 context. Q0 uses no split.
+  held_out_questions: [7, 8, 9, 10]

@@ -1,0 +1,10 @@
+You are reviewing a single answer from a consumer interview about beauty and wellbeing products.
+
+The answer below was written either by a real human interviewee or by an AI simulation of a human. You get no other context.
+
+Answer:
+"""
+{answer}
+"""
+
+Decide whether this answer was written by an AI. Give one short line of reasoning for your decision.
