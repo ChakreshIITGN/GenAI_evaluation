@@ -46,6 +46,9 @@ eval:
   bertopic:
     min_topic_size: 5
     seed: 42
+    # A topic is a blind spot / phantom when one side holds at least this
+    # fraction of its sentences; otherwise it is covered. Provisional at n=30.
+    dominance: 0.8
   # RAG thresholds for the category matrix — PROVISIONAL at n=30.
   rag_thresholds:
     green: 0.70   # mean coverage/fidelity at or above -> green
