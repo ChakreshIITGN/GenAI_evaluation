@@ -20,13 +20,19 @@ Prepared for Roland Berger (RB GenAI evaluation).
 
 import json
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
 import yaml
 
-from src.eda import judge_content, judge_is_ai, judge_personality, save_split, split_questions
+from src.eda import (
+    judge_content,
+    judge_is_ai,
+    judge_personality,
+    save_split,
+    split_questions,
+)
 from src.load import load_answers
 from src.stylometric import Stylometric
 
@@ -216,7 +222,7 @@ def main() -> None:
     measure_features(df).to_csv(results_dir / "measured_features.csv", index=False)
 
     manifest = {
-        "run_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "run_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "config": CONFIG,
         "llm_calls": {"q0": len(q0), "q1": len(q1), "q2": len(q2)},
         "tokens": "not captured on the EDA branch",

@@ -21,7 +21,7 @@ from pydantic import BaseModel
 # repo root — add the root so "src" imports like everywhere else.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.llm import ask  # noqa: E402  (needs the path fix above first)
+from src.llm import ask
 
 # kimi-k3 and qwen3.5 dropped: not available on the free plan (probed).
 CANDIDATES: list[str] = [
@@ -50,7 +50,9 @@ def main() -> None:
         try:
             result = ask(prompt, Probe, model=model)
             status = f"OK    answer={result.answer}  ({time.time() - start:.1f}s)"
-        except Exception as err:  # any failure: auth, quota, unknown model
+        # Deliberately broad: for a probe, ANY failure (auth, quota, unknown
+        # model, bad JSON) means the same thing — the model is unusable.
+        except Exception as err:  # noqa: BLE001
             status = f"FAIL  {type(err).__name__}: {str(err)[:120]}"
         print(f"{model:<22} {status}")
 

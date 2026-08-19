@@ -112,6 +112,32 @@ Major decisions and milestones, newest last. Each entry: date, decision, why.
   apparent "changes" were traced to the fold-design run judging different
   questions per judge than the final shared-set panel.
 
+## 2026-08-19 — agentic_workflow branch: one LangChain agent per judge model
+
+- **Agentic re-implementation of the EDA judging** (`src/agents/`,
+  `run_agentic_eda.py`): each judge model in `eda.judges` runs as its own
+  `JudgeAgent` wrapping a LangChain LCEL chain (ChatOllama, cloud host,
+  temp 0, fixed seed, format=json). Rationale: per-model tracking,
+  independent scaling, judge-family diversity. Architecture and pinned
+  limitations in docs/AGENTIC_NOTES.md.
+- **LCEL only, no LangGraph** (plan §1): the chain is
+  `ChatOllama | RunnableLambda`; orchestration is plain loops in
+  `src/agents/orchestrator.py`. Dependencies added (sanctioned by plan §1):
+  `langchain`, `langchain-core`, `langchain-ollama`.
+- **Everything judge-visible is reused, not duplicated:** Pydantic schemas
+  (`src/eda_models.py`), prompts (`user_prompts/eda/`), fence
+  stripping/schema block (`src/llm.py`), split (`src/eda.py`), metric/
+  reason/feature functions (`run_eda.py`). Outputs land in output/ with the
+  exact run_eda.py CSV schemas, so src/plots.py works unchanged.
+- **Separate cache** `cache/agentic/` (same (model, prompt hash) key as
+  src/llm.py) so agentic runs never collide with the EDA cache.
+- **Per-agent monitoring:** one JSONL call log per agent under
+  output/agent_logs/ (timestamp, prompt hash, latency,
+  success/repair/fail/cache_hit, token counts) + aggregated
+  output/agent_summary.json. Scaling work (async fan-out, token budgeting,
+  batching, shared context store) deliberately deferred — see
+  AGENTIC_NOTES.md limitations.
+
 ## Progress
 
 - [x] main pushed (spec, CLAUDE.md, scaffolding); `eda` branch created
@@ -130,3 +156,6 @@ Major decisions and milestones, newest last. Each entry: date, decision, why.
       land in output/ and figures in output/plots/ (author instruction;
       config paths.results/paths.plots).
 - [ ] Part 8: README, CLAUDE.md current-state update, cleanup, push eda
+- [x] agentic_workflow branch: src/agents/ (JudgeAgent, monitor,
+      orchestrator), run_agentic_eda.py, tests/test_agents.py (mocked, no
+      network), docs/AGENTIC_NOTES.md

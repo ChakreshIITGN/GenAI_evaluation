@@ -19,6 +19,14 @@ paths:
   results: "output"                     # all run outputs (CSV/JSON) land here
   plots: "output/plots"                 # all figures land here
 
+agents:
+  # Agentic re-implementation (agentic_workflow branch): one JudgeAgent per
+  # judge model in eda.judges. Same host/temperature/seed as llm above; a
+  # SEPARATE cache so agentic runs never collide with src/llm.py's cache.
+  cache_dir: "cache/agentic"          # disk cache keyed on (model, prompt hash)
+  log_dir: "output/agent_logs"        # one JSONL call log per agent (monitoring)
+  summary_file: "output/agent_summary.json"  # aggregated per-agent stats
+
 eda:
   # Judge inputs are lowercased so orthography (caps/typos) cannot drive
   # verdicts — we cannot tell transcription artefacts from real style.
