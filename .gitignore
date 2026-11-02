@@ -241,4 +241,8 @@ report/*.aux
 report/*.blg
 report/*.log
 report/*.out
+report/*.synctex.gz
 **/* 2.py
+
+# evaluator supplement zip (local build artifact)
+RB_GenAI_supplement_data_results.zip
