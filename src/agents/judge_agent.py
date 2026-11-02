@@ -40,7 +40,7 @@ from src.eda_models import CapturesContent, CapturesPersonality, IsAI
 # and their cached prompts stay byte-identical.
 from src.llm import _schema_block, _strip_fences, load_prompt
 
-load_dotenv()  # makes OLLAMA_KIMIK3_KEY1 available before any agent is built
+load_dotenv()  # makes OLLAMA_API_KEY available before any agent is built
 
 _CONFIG: dict = yaml.safe_load(Path("config.yaml").read_text())
 LLM_CFG: dict = _CONFIG["llm"]
@@ -112,7 +112,7 @@ class JudgeAgent:
             seed=LLM_CFG["seed"],
             format="json",
             client_kwargs={
-                "headers": {"Authorization": f"Bearer {os.environ['OLLAMA_KIMIK3_KEY1']}"}
+                "headers": {"Authorization": f"Bearer {os.environ['OLLAMA_API_KEY']}"}
             },
         )
         # The LCEL chain: chat model piped into reply extraction. Everything

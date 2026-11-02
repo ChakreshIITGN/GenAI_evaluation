@@ -138,6 +138,85 @@ Major decisions and milestones, newest last. Each entry: date, decision, why.
   batching, shared context store) deliberately deferred — see
   AGENTIC_NOTES.md limitations.
 
+## 2026-11-02 — RB-AI-publ branch: scrape the RB AI publications listing
+
+- **Decision**: `scrape_rb_ai.py` + `src/scrape_rb.py` collect every article
+  tile on rolandberger.com's AI publications page (title, url, label, date,
+  authors, summary, body text) into `data/rb_ai_publications.json`.
+- **Why**: author request. robots.txt allows crawling (only `/search/` is
+  disallowed); one request per article with a 1 s pause (config `scrape`).
+- **Output in data/ (gitignored)**: article text is Roland Berger copyright
+  and this repo is public; only the code is committed.
+- **One listing request is enough**: "Load More" only reveals tiles already
+  in the page HTML (Angular `limit`), so all 56 unique articles are there.
+  Menu links to non-AI articles are excluded by keeping tile links only.
+- **New dependencies** (author approved): `requests`, `beautifulsoup4`.
+- **Authors**: magazine pieces have no author line, so the writer is taken
+  from the opening byline ("by X Artworks by Y" -> X). 7 of 56 articles name
+  no author anywhere and keep `authors: []`.
+- **Known limit**: some bodies end with a sign-up / subscribe line.
+
+## 2026-11-02 — RB-AI-publ branch: chunk + embed the scraped articles
+
+- **Decision**: `embed_rb_ai.py` + `src/chunk_rb.py` write
+  `data/rb_ai_chunks.jsonl` (one chunk per line: metadata, text, vector)
+  and `data/rb_ai_chunks_manifest.json` (model, dimension, settings).
+- **Model**: Ollama Cloud serves no embedding models (all embed calls
+  return 401; its catalogue is chat-only). Author chose sentence-transformers
+  over pulling a local Ollama model; we reuse `all-mpnet-base-v2`, already
+  the eval's embedding model and cached locally.
+- **Chunking** (author choice): ~300 tokens, 50-token overlap, whole
+  sentences only. Tokens are counted with the model's own tokenizer, and the
+  budget shrinks so header + chunk fits the model's 384-token window; no
+  chunk is ever silently truncated.
+- **Metadata in the vector**: each chunk is embedded as
+  "Title / Date / Authors" header + text, so searches can match on metadata.
+  `text` in the JSONL is the chunk alone; `date_iso` allows date filtering.
+
+## 2026-11-02 — RB-AI-publ branch: clean-up, analysis and interactive map
+
+- **Environment**: iCloud "Desktop & Documents" had evicted 40,777 of 46,530
+  `.venv` files, so every import downloaded from iCloud (24-min embed run,
+  hanging pytest). `.venv` is now a symlink to `.venv.nosync` (iCloud skips
+  `*.nosync`), rebuilt with `uv sync` + the en_core_web_sm wheel. Imports 5 s,
+  full suite 8 s.
+- **Key name**: code read `OLLAMA_KIMIK3_KEY1`; `.env` holds `OLLAMA_API_KEY`.
+  Renamed in src/llm.py, src/agents/judge_agent.py, tests, .env.example.
+- **Duplicates removed**: six Finder " 2" copies (five identical, one older
+  draft of src/cluster.py). No duplicate articles (0 shared URLs/titles, no
+  shared body text); site boilerplate lines are dropped at scrape time
+  (config `scrape.boilerplate_min_articles`).
+- **Analysis** (`analyze_rb_ai.py`, `src/analyze_rb.py`): k-means on mean
+  chunk vectors, k in 6-8 by silhouette (k=8, 0.185; full-range best k=4
+  only splits eras); kNN network (3 neighbours, cosine >= 0.65). One
+  gpt-oss:120b reading per article (stance -2..+2, verbatim evidence quote,
+  themes, voices) via src/llm.py; quotes verified word for word (53/56
+  evidence, 85/101 voices). LLM cache under data/ because it stores prompts.
+- **src/llm.py**: `ask(..., cache_dir=None)` and list-aware example replies;
+  flat schemas render identically, so existing EDA cache keys still match.
+- **Map page**: published as a private claude.ai artifact, built from
+  data/rb_ai_analysis.json; not in the repo (it embeds article quotes).
+
+## 2026-11-02 — RB-AI-publ: verification, offices, call-to-action cleanup
+
+- **Stance checked by three models** (author asked for verification):
+  gpt-oss:120b (primary) + deepseek-v4.1-flash + glm-5.2
+  (`analysis.check_models`). Krippendorff alpha (ordinal) 0.82; same
+  direction 46/56; within one point 54/56. Headline counts hold for every
+  model (2025-26: 25-27 of 28 positive; 2024: 5-7 of 10 cautious).
+- **deepseek-v4-flash retired** on Ollama Cloud (2026-09-25). It is still in
+  `eda.judges`: cached EDA results reproduce, fresh EDA/eval runs will fail
+  on it until replaced.
+- **Offices and titles** come from each author's profile page (57/57 read);
+  they are today's office, not necessarily the office at time of writing.
+- **Calls to action removed** sentence by sentence
+  (`scrape.call_to_action_patterns`); 18 lines cleaned, real uses of words
+  like "subscription" kept.
+- **Reproducibility**: `docs/RB_AI_REPRODUCE.md` (scripts, score
+  definitions, run steps, verification); `provenance` block in the analysis
+  JSON (git commit, input hashes, settings); human audit sheet
+  `data/rb_ai_stance_audit.csv`.
+
 ## Progress
 
 - [x] main pushed (spec, CLAUDE.md, scaffolding); `eda` branch created

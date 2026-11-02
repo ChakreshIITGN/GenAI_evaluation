@@ -5,7 +5,7 @@ Provides:
     ask(prompt, schema[, model])   -> validated Pydantic instance
 
 Calls Ollama cloud (host, model, temperature, seed from config.yaml; API key
-from OLLAMA_KIMIK3_KEY1 in .env) with format="json", appends the schema's JSON
+from OLLAMA_API_KEY in .env) with format="json", appends the schema's JSON
 Schema to the prompt, validates the reply, retries once with a repair prompt
 on validation failure, and caches every raw reply as JSON on disk keyed on
 (model, prompt hash) so re-runs are free and reproducible without keys.
@@ -21,6 +21,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from typing import get_args, get_origin
 
 import yaml
 from dotenv import load_dotenv
@@ -37,7 +38,7 @@ CACHE_DIR = Path(LLM_CFG["cache_dir"])
 # One client for the whole run — built once at import, never per call.
 _client = Client(
     host=LLM_CFG["host"],
-    headers={"Authorization": f"Bearer {os.environ.get('OLLAMA_KIMIK3_KEY1', '')}"},
+    headers={"Authorization": f"Bearer {os.environ.get('OLLAMA_API_KEY', '')}"},
 )
 
 
@@ -50,10 +51,10 @@ def load_prompt(name: str) -> str:
     return (PROMPTS_DIR / f"{name}.txt").read_text()
 
 
-def _cache_path(model: str, prompt: str) -> Path:
+def _cache_path(model: str, prompt: str, cache_dir: Path) -> Path:
     """Deterministic cache file for one (model, prompt) pair."""
     key = hashlib.sha256(f"{model}\n{prompt}".encode()).hexdigest()[:24]
-    return CACHE_DIR / f"{key}.json"
+    return cache_dir / f"{key}.json"
 
 
 def _call(prompt: str, model: str) -> str:
@@ -87,12 +88,20 @@ def _example_instance(schema: type[BaseModel]) -> str:
     Some models echo the schema back instead of answering; a concrete
     example instance is the reliable cure.
     """
+    return json.dumps(_example_value(schema))
+
+
+def _example_value(annotation: object) -> object:
+    """Placeholder for one field type; lists and nested models are shown whole."""
     placeholders = {bool: True, float: 0.0, int: 0}
-    example = {
-        name: placeholders.get(field.annotation, "...")
-        for name, field in schema.model_fields.items()
-    }
-    return json.dumps(example)
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        return {
+            name: _example_value(field.annotation)
+            for name, field in annotation.model_fields.items()
+        }
+    if get_origin(annotation) is list:
+        return [_example_value(get_args(annotation)[0])]
+    return placeholders.get(annotation, "...")
 
 
 def _schema_block(schema: type[BaseModel]) -> str:
@@ -106,7 +115,12 @@ def _schema_block(schema: type[BaseModel]) -> str:
     )
 
 
-def ask[S: BaseModel](prompt: str, schema: type[S], model: str | None = None) -> S:
+def ask[S: BaseModel](
+    prompt: str,
+    schema: type[S],
+    model: str | None = None,
+    cache_dir: Path | None = None,
+) -> S:
     """Send `prompt` and return the reply parsed into `schema`.
 
     Args:
@@ -114,6 +128,9 @@ def ask[S: BaseModel](prompt: str, schema: type[S], model: str | None = None) ->
             here — prompt templates must not describe the output format).
         schema: Pydantic model class the reply must satisfy.
         model: Ollama model tag; defaults to config.yaml llm.model.
+        cache_dir: where to cache replies; defaults to config.yaml
+            llm.cache_dir. Prompts holding confidential or copyrighted text
+            pass a gitignored folder, since cache files store the prompt.
 
     Returns:
         A validated `schema` instance.
@@ -125,7 +142,8 @@ def ask[S: BaseModel](prompt: str, schema: type[S], model: str | None = None) ->
     model = model or LLM_CFG["model"]
     full_prompt = prompt + _schema_block(schema)
 
-    cache_file = _cache_path(model, full_prompt)
+    cache_dir = cache_dir or CACHE_DIR
+    cache_file = _cache_path(model, full_prompt, cache_dir)
     if cache_file.exists():
         raw = json.loads(cache_file.read_text())["raw"]
         return schema.model_validate_json(_strip_fences(raw))
@@ -147,6 +165,6 @@ def ask[S: BaseModel](prompt: str, schema: type[S], model: str | None = None) ->
         parsed = schema.model_validate_json(_strip_fences(raw))  # second failure propagates
 
     # Only validated replies are cached, so cache hits never need repair.
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cache_dir.mkdir(parents=True, exist_ok=True)
     cache_file.write_text(json.dumps({"model": model, "prompt": full_prompt, "raw": raw}))
     return parsed

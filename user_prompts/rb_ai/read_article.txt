@@ -1,0 +1,21 @@
+You are analysing a publication by the consultancy Roland Berger about artificial intelligence.
+
+Read the article and report:
+- stance: the article's overall position on AI, as one integer:
+  -2 = warns: AI is mainly a threat or a danger to guard against
+  -1 = cautious: sees value but stresses risks, limits or hype
+   0 = balanced: weighs opportunities and risks evenly, or is descriptive
+  +1 = positive: AI is an opportunity worth pursuing, with some caveats
+  +2 = champions: AI is essential and urgent; firms must adopt it now
+- stance_reason: one sentence explaining the stance.
+- evidence_quote: ONE sentence copied word for word from the article that best shows the stance. Copy it exactly; do not paraphrase or shorten it.
+- themes: 2 to 4 short lowercase phrases naming what the article is about (e.g. "workforce reskilling", "ai regulation", "data center energy").
+- main_message: the article's core claim in one sentence.
+- voices: every named person who is quoted or featured in the article, other than its authors ({authors}). For each: name, role, view (champion, optimist, balanced, cautious or critic, meaning their view of AI), and one sentence copied word for word from the article that shows that view. Use an empty list if there are none.
+
+Title: {title}
+Date: {date}
+Type: {label}
+
+Article:
+{content}

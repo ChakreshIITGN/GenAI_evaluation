@@ -15,6 +15,7 @@ Prompts are grouped in one subfolder per usage stage:
 user_prompts/
   eda/       # the three EDA sanity-check judgements (this branch)
   judges/    # Layer-3 judge prompts (added on the eval branch)
+  rb_ai/     # reading the scraped RB AI publications (RB-AI-publ branch)
 ```
 
 | File | Used by | Purpose | Placeholders |
@@ -24,6 +25,8 @@ user_prompts/
 | `eda/content.txt` | `judge_content` (EDA Q2) | Pairwise: does the AI answer capture the content of the human answer to the same question? | `{question}`, `{human_answer}`, `{ai_answer}` |
 | `judges/individuation.txt` | `judge_individuation` (Layer 3, Judge A) | Persona sketch + pair: recognisably THIS person or a generic segment member? Score −1…+1. | `{persona_answers}`, `{human_answer}`, `{ai_answer}` |
 | `judges/believability.txt` | `judge_believability` (Layer 3, Judge B) | Blind: one unlabelled answer — how human does it read? Score −1…+1. | `{answer}` |
+| `rb_ai/read_article.txt` | `read_article` (`src/analyze_rb.py`) | One RB article: stance on AI (−2…+2), verbatim evidence quote, themes, main message, featured voices. | `{title}`, `{date}`, `{label}`, `{authors}`, `{content}` |
+| `rb_ai/name_cluster.txt` | `name_cluster` (`src/analyze_rb.py`) | Name a group of similar articles from their titles and themes. | `{articles}` |
 
 Editing rules:
 - Keep placeholders exactly as named — code fills them by keyword.

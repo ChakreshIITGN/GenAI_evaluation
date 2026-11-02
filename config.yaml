@@ -19,6 +19,58 @@ paths:
   results: "output"                     # all run outputs (CSV/JSON) land here
   plots: "output/plots"                 # all figures land here
 
+scrape:
+  # RB-AI-publ branch: scrape the RB AI publications listing (scrape_rb_ai.py).
+  # Output goes under data/ (gitignored): the article text is RB copyright.
+  listing_url: "https://www.rolandberger.com/en/Insights/Global-Topics/Artificial-Intelligence/Publications/"
+  article_prefix: "https://www.rolandberger.com/en/Insights/Publications/"
+  output: "data/rb_ai_publications.json"
+  user_agent: "Mozilla/5.0 (RB GenAI evaluation research scraper)"
+  timeout_s: 30         # per request
+  delay_s: 1.0          # pause between article requests, to be polite
+  boilerplate_min_articles: 3  # a line in this many articles is a site template
+  # Sentences that ask the reader to register, subscribe or download are
+  # site calls to action, not article content. Matched case-insensitively,
+  # one sentence at a time (some sit at the end of real paragraphs).
+  call_to_action_patterns:
+    - "^(register|sign up|subscribe|stay current|stay up to date|curious about)\\b"
+    - "download (a copy|the full|our)"
+    - "(contact|get in touch with) one of our experts"
+    - "access the full (study|publication|report)"
+    - "regular news and updates"
+    - "we will email you"
+    - "hearing from you"
+
+embed:
+  # RB-AI-publ branch: chunk + embed the scraped articles (embed_rb_ai.py).
+  # Ollama Cloud serves no embedding models, so this runs locally with the
+  # same sentence-transformers model the eval uses (already cached).
+  model: "sentence-transformers/all-mpnet-base-v2"
+  chunk_tokens: 300     # max text tokens per chunk (model tokenizer)
+  overlap_tokens: 50    # trailing sentences carried into the next chunk
+  batch_size: 32
+  output: "data/rb_ai_chunks.jsonl"          # one chunk per line, with vector
+  manifest: "data/rb_ai_chunks_manifest.json" # model, dim, settings, counts
+
+analysis:
+  # RB-AI-publ branch: clusters, network, stance and voices (analyze_rb_ai.py).
+  # LLM = llm.model via src/llm.py. Its cache stores prompts (article text),
+  # so it lives under data/ (gitignored), not the committed cache/.
+  cache_dir: "data/cache_rb_ai"
+  output: "data/rb_ai_analysis.json"
+  # Silhouette is low and flat for every k (0.16-0.21); k=4 only splits the
+  # 2018 magazine era from 2025-26 studies. 6-8 gives readable topic groups.
+  k_min: 6
+  k_max: 8
+  seed: 42
+  neighbours: 3         # network: link each article to its 3 most similar
+  min_similarity: 0.65  # ... only if cosine similarity is at least this
+  workers: 4            # parallel LLM calls
+  # Second opinions on stance from other model families (agreement check).
+  # deepseek-v4-flash was retired on 2026-09-25; v4.1 replaces it here.
+  check_models: ["deepseek-v4.1-flash", "glm-5.2"]
+  audit_sheet: "data/rb_ai_stance_audit.csv"  # blank columns for a human check
+
 agents:
   # Agentic re-implementation (agentic_workflow branch): one JudgeAgent per
   # judge model in eda.judges. Same host/temperature/seed as llm above; a

@@ -41,7 +41,7 @@ class FakeChain:
 @pytest.fixture
 def agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> JudgeAgent:
     """A JudgeAgent with tmp cache/log dirs and the chain replaced by a fake."""
-    monkeypatch.setenv("OLLAMA_KIMIK3_KEY1", "test-key")  # no real key needed
+    monkeypatch.setenv("OLLAMA_API_KEY", "test-key")  # no real key needed
     monkeypatch.setattr(judge_agent, "CACHE_DIR", tmp_path / "cache")
     monkeypatch.setattr(monitor, "LOG_DIR", tmp_path / "logs")
     built = JudgeAgent("test-model")
