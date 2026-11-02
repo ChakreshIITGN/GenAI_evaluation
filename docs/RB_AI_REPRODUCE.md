@@ -124,6 +124,17 @@ model families). For the 56 articles the analysis reports:
 
 Each article also carries `stance_by_model`, so any disagreement can be inspected.
 
+### Scope and authorship (Roland Berger's own classification)
+- **Which articles**: exactly the publications Roland Berger files under its
+  AI topic page (the listing URL in `scrape.listing_url`). Publications from
+  other practices that discuss AI (for example banking or automotive pieces)
+  are not included, because Roland Berger does not file them as AI.
+- **Who is an author**: the people in the article's own "By ..." line.
+  Author profile pages on rolandberger.com also list articles where the
+  person only appears in the "Contact our experts" panel, and pieces filed
+  under other topics, so a profile can show more items than this analysis
+  credits to that person.
+
 ### Authors and offices
 - **Author counts**: articles where the person is named as author.
 - **Office counts**: distinct articles with at least one author from that
